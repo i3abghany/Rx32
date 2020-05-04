@@ -39,7 +39,7 @@ architecture test of top is
 		);
 		port(
 			A:   in STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0);
-			RD: out STD_LOGIC_VECTOR(DataWidth - 1DOWNTO 0)
+			RD: out STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0)
 		);
 	end component;
 	signal PC, instr, ReadData: STD_LOGIC_VECTOR(31 DOWNTO 0);
