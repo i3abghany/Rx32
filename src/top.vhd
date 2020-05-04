@@ -38,29 +38,13 @@ architecture test of top is
 			Capacity:  integer := 256
 		);
 		port(
-			A:   in STD_LOGIC_VECTOR(31 DOWNTO 0);
-			RD: out STD_LOGIC_VECTOR(31 DOWNTO 0)
+			A:   in STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0);
+			RD: out STD_LOGIC_VECTOR(DataWidth - 1DOWNTO 0)
 		);
-	end IMem;
+	end component;
 	signal PC, instr, ReadData: STD_LOGIC_VECTOR(31 DOWNTO 0);
 begin
 	Processor:   Mips port map(clk, reset, PC, instr, MemWrite, DataAddr, WriteData, ReadData);
 	DataMemory:  DMem generic map(32, 256) port map(clk, MemWrite, DataAddr, WriteData, ReadData);
 	InstrMemory: IMem generic map(32, 256) port map(PC(9 DOWNTO 2), instr);
 end test;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
