@@ -13,7 +13,7 @@ entity Datapath is
 		instr:                 in STD_LOGIC_VECTOR(31 DOWNTO 0);
 		ReadData: 			   in STD_LOGIC_VECTOR(31 DOWNTO 0);
 		PC:    			   buffer STD_LOGIC_VECTOR(31 DOWNTO 0);
-		ALUOut, WriteData: buffer STD_LOGIC_VECTOR(31 DOWNTO 0);
+		ALUOut, WriteData: buffer STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 end Datapath;
 
@@ -23,7 +23,7 @@ architecture Structural of Datapath is
 			a, b: 	   in STD_LOGIC_VECTOR(31 DOWNTO 0);
 			ALUControl: in STD_LOGIC_VECTOR(1 DOWNTO 0);
 			result:   out STD_LOGIC_VECTOR(31 DOWNTO 0);
-			zero:    					  out STD_LOGIC;
+			zero:    					  out STD_LOGIC
 		);
 	end component;
 	
@@ -104,17 +104,4 @@ begin
 	-- ALU logic.
 	SrcBMux: Mux2 generic map(32) port map(WriteData, SignImm, ALUSrc, SrcB);
 	ALU: MainALU port map(SrcA, SrcB, ALUControl, ALUOut, ZeroFlag);
-end Datapath;
-
-
-
-
-
-
-
-
-
-
-
-
-
+end Structural;
