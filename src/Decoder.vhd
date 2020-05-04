@@ -7,7 +7,7 @@ entity MainControlDecoder is
 		ALUOp:  out STD_LOGIC_VECTOR(1 DOWNTO 0);
 		MemWrite, MemToReg: 	   out STD_LOGIC;
 		RegDist, RegWrite:  	   out STD_LOGIC;
-		ALUSrc, branch, jump   	   out STD_LOGIC;
+		ALUSrc, branch, jump   	   out STD_LOGIC
 	);
 end MainControlDecoder;
 
@@ -34,7 +34,7 @@ entity ALUControlDecoder is
 	port(
 		funct: 		 in STD_LOGIC_VECTOR(31 DOWNTO 26);
 		ALUOp: 		   in STD_LOGIC_VECTOR(1 DOWNTO 0);
-		ALUControl:   out STD_LOGIC_VECTOR(2 DOWNTO 0);
+		ALUControl:   out STD_LOGIC_VECTOR(2 DOWNTO 0)
 	);
 end ALUControlDecoder;
 
@@ -56,18 +56,3 @@ begin
 		end case;
 	end process;
 end Behavioral;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
