@@ -4,16 +4,16 @@ use IEEE.STD_LOGIC_ARITH.all;
 
 entity Datapath is 
 	port(
-		clk, reset:                    		       in STD_LOGIC;
-		MemToReg, PCSrc:               		       in STD_LOGIC;
-		ALUSrc, RegDist:               		       in STD_LOGIC;
-		RegWrite, jump:                		       in STD_LOGIC;
-		ZeroFlag:                                 out STD_LOGIC;
-		ALUControl: 			in STD_LOGIC_VECTOR(2 DOWNTO 0);
-		instr:                 in STD_LOGIC_VECTOR(31 DOWNTO 0);
+		clk, reset:                    		               in STD_LOGIC;
+		MemToReg, PCSrc:               		               in STD_LOGIC;
+		ALUSrc, RegDist:               		               in STD_LOGIC;
+		RegWrite, jump:                		               in STD_LOGIC;
+		ZeroFlag:                                             out STD_LOGIC;
+		ALUControl: 			   in STD_LOGIC_VECTOR( 2 DOWNTO 0);
+		instr:                             in STD_LOGIC_VECTOR(31 DOWNTO 0);
 		ReadData: 			   in STD_LOGIC_VECTOR(31 DOWNTO 0);
-		PC:    			   buffer STD_LOGIC_VECTOR(31 DOWNTO 0);
-		ALUOut, WriteData: buffer STD_LOGIC_VECTOR(31 DOWNTO 0)
+		PC:    			       buffer STD_LOGIC_VECTOR(31 DOWNTO 0);
+		ALUOut, WriteData:             buffer STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 end Datapath;
 
@@ -23,7 +23,7 @@ architecture Structural of Datapath is
 			a, b: 	   in STD_LOGIC_VECTOR(31 DOWNTO 0);
 			ALUControl: in STD_LOGIC_VECTOR(1 DOWNTO 0);
 			result:   out STD_LOGIC_VECTOR(31 DOWNTO 0);
-			zero:    					  out STD_LOGIC
+			ZeroFlag:    		      out STD_LOGIC
 		);
 	end component;
 	
