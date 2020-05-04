@@ -7,7 +7,7 @@ component ALU is
 		a, b: 	   in STD_LOGIC_VECTOR(31 DOWNTO 0);
 		ALUControl: in STD_LOGIC_VECTOR(2 DOWNTO 0);
 		result:   out STD_LOGIC_VECTOR(31 DOWNTO 0);
-		ZeroFlag:                     out STD_LOGIC
+		ZeroFlag:    	              out STD_LOGIC
 	);
 end;
 
@@ -19,5 +19,6 @@ begin
 		when "000" => result <= a AND b;
 		when "001" => result <= a OR b;
 		when "111" => result <= X"00000001" when (a < b) else X"00000000";
+		when "101" => result <= a NOR b;
 		others     => result <= X"00000000";
 end Behavioral;
