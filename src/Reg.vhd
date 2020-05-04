@@ -16,8 +16,10 @@ begin
 		if (rising_edge(clk, reset)) then 
 			if reset then 
 				q <= (others => '0');
+			end if;
 			elsif (rising_edge(clk)) then 
 				q <= d;
+			end if;
 		end if;
 	end process;
 end Asynch;
