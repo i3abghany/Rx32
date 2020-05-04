@@ -18,6 +18,6 @@ architecture Behavioral of IMem is
 begin 
 	ResetState: for i in 0 to Capacity - 1 begin
 		IRAM(i) <= (others => '0');
-	end ResetState;
+	end loop ResetState;
 	RD <= IRAM(TO_INTEGER(A));
 end Behavioral;
