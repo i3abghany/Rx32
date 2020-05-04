@@ -22,7 +22,7 @@ architecture SingleCycleStructural of Mips is
 			MemWrite, MemToReg:              out STD_LOGIC; 
 			RegWrite, RegDist:               out STD_LOGIC;
 			ALUSrc, PCSrc:                   out STD_LOGIC;
-			jump:                            out STD_LOGIC;
+			jump:                            out STD_LOGIC
 		);
 	end component;
 	
@@ -37,7 +37,7 @@ architecture SingleCycleStructural of Mips is
 			instr:                 in STD_LOGIC_VECTOR(31 DOWNTO 0);
 			ReadData: 			   in STD_LOGIC_VECTOR(31 DOWNTO 0);
 			PC:    			   buffer STD_LOGIC_VECTOR(31 DOWNTO 0);
-			ALUOut, WriteData: buffer STD_LOGIC_VECTOR(31 DOWNTO 0);
+			ALUOut, WriteData: buffer STD_LOGIC_VECTOR(31 DOWNTO 0)
 			);
 	end component;
 	
@@ -56,14 +56,3 @@ begin
 		ALUOut, WriteData 
 	);
 end SingleCycleStructural;
-
-
-
-
-
-
-
-
-
-
-
