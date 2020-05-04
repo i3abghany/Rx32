@@ -20,7 +20,7 @@ architecture Behavioral of DMem is
 begin
 	process(clk) begin
 		if (rising_edge(clk)) then 
-			if(WE = '1') then RAM(TO_INTEGER(A)) <= WD;
+			if(WE = '1') then RAM(TO_INTEGER(A)) <= WD; end if;
 		end if;
 		RD <= (RAM(TO_INTEGER(A)));
 	end process;
