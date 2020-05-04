@@ -8,6 +8,7 @@ entity Datapath is
 		MemToReg, PCSrc:               		               in STD_LOGIC;
 		ALUSrc, RegDist:               		               in STD_LOGIC;
 		RegWrite, jump:                		               in STD_LOGIC;
+		jumpReg:		 			       in STD_LOGIC;
 		ZeroFlag:                                             out STD_LOGIC;
 		ALUControl: 			   in STD_LOGIC_VECTOR( 2 DOWNTO 0);
 		instr:                             in STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -94,7 +95,8 @@ begin
 	MulBy4:             SL2 port map(SignImm, MulImm);
 	BranchAdder:        Adder port map(PCplus4, MulImm, PCBranch);
 	BranchMux:          Mux2 generic map(32) port map(PCplus4, PCBranch, PCSrc, IsBranchPC);
-	JumpMux:            Mux2 generic map(32) port map(IsBranchPC, PCJump, jump, PCNext);
+	JumpMux:            Mux2 generic map(32) port map(IsBranchPC, PCJump, jump, IsJumpPC);
+	JRMux:              Mux2 generic map(32) port map(IsJumpPC, SrcA, jumpReg, PCNext);
 	
 	-- Register File Logic.
 	Mux2 RegMux: generic map(5) port map(instr(20 DOWNTO 16), instr(15 DOWNTO 11), RegDist, WriteReg);
