@@ -9,6 +9,7 @@ entity Datapath is
 		ALUSrc, RegDist:               		               in STD_LOGIC;
 		RegWrite, jump:                		               in STD_LOGIC;
 		jumpReg:		 			       in STD_LOGIC;
+		jumpLink:                          in STD_LOGIC;
 		ZeroFlag:                                             out STD_LOGIC;
 		ALUControl: 			   in STD_LOGIC_VECTOR( 2 DOWNTO 0);
 		instr:                             in STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -84,8 +85,10 @@ architecture Structural of Datapath is
 	SIGNAL MulImm: 	                            STD_LOGIC_VECTOR(31 DOWNTO 0);
 	SIGNAL PCBranch:                            STD_LOGIC_VECTOR(31 DOWNTO 0);
 	SIGNAL WriteReg:              		    STD_LOGIC_VECTOR( 4 DOWNTO 0);
-	SIGNAL Result:			       	    STD_LOGIC_VECTOR(31 DOWNTO 0);
-	SIGNAL SrcA, SrcBMux			    STD_LOGIC_VECTOR(31 DOWNTO 0);
+	SIGNAL Result:			       	    STD_LOGIC_VECTOR(31 DOWNTO 0); -- value from memory or ALU.
+	SIGNAL ResultToRegFile:             STD_LOGIC_VECTOR(31 DOWNTO 0); -- value from Result or PC+4
+	SIGNAL SrcA, SrcB:			        STD_LOGIC_VECTOR(31 DOWNTO 0);
+	SIGNAL ReturnReg:					STD_LOGIC_VECTOR(4 DOWNTO 0) := X"1F";
 begin
 	-- Next PC logic.
 	PCAdder: Adder(PC, X"00000004", PCplus4);
@@ -100,8 +103,10 @@ begin
 	
 	-- Register File Logic.
 	Mux2 RegMux: generic map(5) port map(instr(20 DOWNTO 16), instr(15 DOWNTO 11), RegDist, WriteReg);
-	Mux2 ResultMUX: generic map(31) port map(ALUOut, ReadData, MemToReg, Result); 
-	RF: RegFile port map(clk, RegWrite, instr(25 DOWNTO 21), instr(21 DOWNTO 16), WriteReg, Result, SrcA, WriteData);
+	Mux2 ResultMUX: generic map(32) port map(ALUOut, ReadData, MemToReg, Result); 
+	Mux2 JALMux:    generic map(32) port map(Result, PCplus4, jumpLink, ResultToRegFile);
+	Mux2 JALAddMux: generic map(32) port map(WriteReg, ReturnReg, jumpLink, WriteRegFinal);
+	RF: RegFile port map(clk, RegWrite, instr(25 DOWNTO 21), instr(21 DOWNTO 16), WriteReg, ResultToRegFile, SrcA, WriteData);
 	
 	-- ALU logic.
 	SrcBMux: Mux2 generic map(32) port map(WriteData, SignImm, ALUSrc, SrcB);

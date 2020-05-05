@@ -10,7 +10,8 @@ entity Controller is
 		RegWrite, RegDist:               out STD_LOGIC;
 		ALUSrc, PCSrc:                   out STD_LOGIC;
 		jump:                            out STD_LOGIC;
-		jumpReg:                         out STD_LOGIC
+		jumpReg:                         out STD_LOGIC;
+		jumpLink:                        out STD_LOGIC
 	);
 end Controller;
 
@@ -18,11 +19,12 @@ architecture Structural of Controller is
 	component MainControlDecoder is 
 		port(
 			opcode:  in STD_LOGIC_VECTOR(5 DOWNTO 0);
+			funct:	 in STD_LOGIC_VECTOR(5 DOWNTO 0);
 			ALUOp:  out STD_LOGIC_VECTOR(1 DOWNTO 0);
 			MemWrite, MemToReg: 	   out STD_LOGIC;
 			RegDist, RegWrite:  	   out STD_LOGIC;
-			ALUSrc, branch, jump   	   out STD_LOGIC;
-			jumpReg:                   out STD_LOGIC
+			ALUSrc, branch, jump:	   out STD_LOGIC;
+			jumpReg, JumpLink:         out STD_LOGIC
 		);
 	end component;
 	component ALUControlDecoder is 
@@ -36,7 +38,7 @@ architecture Structural of Controller is
 	SIGNAL ALUOp: STD_LOGIC_VECTOR(1 DOWNTO 0);
 	SIGNAL branch: STD_LOGIC;
 begin
-	MainDecoder: MainControlDecoder port map(opcode, ALUOp, MemWrite, MemToReg, RegDist, RegWrite, ALUSrc, branch, jump, jumpReg);
+	MainDecoder: MainControlDecoder port map(opcode, funct, ALUOp, MemWrite, MemToReg, RegDist, RegWrite, ALUSrc, branch, jump, jumpReg, jumpLink);
 	ALUDecoder: ALUControlDecoder port map(funct, ALUOp, ALUControl);
 	PCSrc <= branch AND ZeroFlag;
 end Structural;

@@ -15,10 +15,13 @@ architecture Behavioral of ALU is
 begin
 	case ALUControl is 
 		when "010" => result <= a + b;
-		when "110" => result <= a - b;
+		when "110" => 
+			result <= a - b;
 		when "000" => result <= a AND b;
 		when "001" => result <= a OR b;
 		when "111" => result <= X"00000001" when (a < b) else X"00000000";
 		when "101" => result <= a NOR b;
-		others     => result <= X"00000000";
+		others     => result <= X"--------";
+	end case;
+	ZeroFlag <= NOR result;
 end Behavioral;

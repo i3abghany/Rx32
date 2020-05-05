@@ -23,16 +23,19 @@ architecture SingleCycleStructural of Mips is
 			RegWrite, RegDist:               out STD_LOGIC;
 			ALUSrc, PCSrc:                   out STD_LOGIC;
 			jump:                            out STD_LOGIC;
-			jumpReg:			 out STD_LOGIC
+			jumpReg:			 out STD_LOGIC;
+			jumpLink:			 out STD_LOGIC;
 		);
 	end component;
 	
 	component Datapath is 
 		port(
-			clk, reset:                        	           in STD_LOGIC;
-			MemToReg, PCSrc:                   	           in STD_LOGIC;
-			ALUSrc, RegDist:                   	           in STD_LOGIC;
-			RegWrite, jump:                    	           in STD_LOGIC;
+			clk, reset:                        	               in STD_LOGIC;
+			MemToReg, PCSrc:                   	               in STD_LOGIC;
+			ALUSrc, RegDist:                   	               in STD_LOGIC;
+			RegWrite, jump:                    	               in STD_LOGIC;
+			jumpReg:		 			                       in STD_LOGIC;
+			jumpLink:                  	                       in STD_LOGIC;
 			ZeroFlag:                                         out STD_LOGIC;
 			ALUControl: 	                in STD_LOGIC_VECTOR(2 DOWNTO 0);
 			instr:                         in STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -42,18 +45,18 @@ architecture SingleCycleStructural of Mips is
 			);
 	end component;
 	
-	SIGNAL ZeroFlag, MemToReg, RegWrite, RegDist, ALUSrc, PCSrc, jump, jumpReg: STD_LOGIC;
+	SIGNAL ZeroFlag, MemToReg, RegWrite, RegDist, ALUSrc, PCSrc, jump, jumpReg, jumpLink: STD_LOGIC;
 	SIGNAL ALUControl: STD_LOGIC_VECTOR(2 DOWNTO 0);
 begin
 	ControlUnit: Controller port map(
 			instr(31 DOWNTO 26), instr(5 DOWNTO 0), ALUControl,
 			ZeroFlag, MemWrite, MemToReg, RegWrite, RegDist, 
-			ALUSrc, PCSrc, jump, jumpReg
+			ALUSrc, PCSrc, jump, jumpReg, jumpLink
 		);
 	MainDataPath: Datapath port map(
 		clk, reset, MemToReg, PCSrc, ALUSrc, 
-		RegDist, RegWrite, jump, jumpReg, ZeroFlag, 
-		ALUControl, instr, ReadData, PC,
-		ALUOut, WriteData 
+		RegDist, RegWrite, jump, jumpReg, jumpLink,
+		ZeroFlag, ALUControl, instr, 
+		ReadData, PC, ALUOut, WriteData 
 	);
 end SingleCycleStructural;
