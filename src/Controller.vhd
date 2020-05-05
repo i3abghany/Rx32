@@ -27,6 +27,7 @@ architecture Structural of Controller is
 	end component;
 	component ALUControlDecoder is 
 		port(
+			opcode:        in STD_LOGIC_VECTOR(5 DOWNTO 0);
 			funct: 		 in STD_LOGIC_VECTOR(31 DOWNTO 26);
 			ALUOp: 		   in STD_LOGIC_VECTOR(1 DOWNTO 0);
 			ALUControl:   out STD_LOGIC_VECTOR(2 DOWNTO 0)	

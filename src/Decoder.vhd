@@ -13,7 +13,7 @@ entity MainControlDecoder is
 end MainControlDecoder;
 
 architecture Behavioural of MainControlDecoder is 
-	SIGNAL ControlSignals: STD_LOGIC_VECTOR(8 DOWNTO 0);
+	SIGNAL ControlSignals: STD_LOGIC_VECTOR(9 DOWNTO 0);
 begin
 	process(all) begin
 		case opcode is 
@@ -21,8 +21,8 @@ begin
 			when "100011" => ControlSignals <= "1010010000"; –– LW
 			when "101011" => ControlSignals <= "0010100000"; –– SW
 			when "000100" => ControlSignals <= "0001000001"; –– BEQ
-			when "001000" => ControlSignals <= "1010000000"; –– ADDI
 			when "000010" => ControlSignals <= "0000001000"; –– J
+			when "001000" | "001100" | "001101" => ControlSignals <= "1010000000"; –– Itype
 			when others =>   ControlSignals <= "–––––––––"; –– illegal op
 		end case;	
 	end process;
@@ -38,9 +38,10 @@ end Behavioural;
 
 entity ALUControlDecoder is 
 	port(
+		opcode:        in STD_LOGIC_VECTOR(5 DOWNTO 0);
 		funct: 		 in STD_LOGIC_VECTOR(31 DOWNTO 26);
 		ALUOp: 		   in STD_LOGIC_VECTOR(1 DOWNTO 0);
-		ALUControl:       out STD_LOGIC_VECTOR(2 DOWNTO 0)
+		ALUControl:    out STD_LOGIC_VECTOR(2 DOWNTO 0)
 	);
 end ALUControlDecoder;
 
@@ -48,7 +49,12 @@ architecture Behavioral of ALUControlDecoder is
 begin
 	process (all) begin
 		case ALUOp is
-			when "00" => ALUControl <= "010"; -- Add, for load, store, andi
+			when "00" =>
+				case opcode is 
+					when "001000" => ALUControl <= "010"; -- addi
+					when "001100" => ALUControl <= "000"; -- andi
+					when "001101" => ALUControl <= "001"; -- ori
+				end case;
 			when "01" => ALUControl <= "110"; -- Sub, for beq.
 			when others => -- RTYPE
 				case funct is 
