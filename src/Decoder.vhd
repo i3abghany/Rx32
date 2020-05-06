@@ -8,41 +8,43 @@ entity MainControlDecoder is
 		ALUOp:  out STD_LOGIC_VECTOR(1 DOWNTO 0);
 		MemWrite, MemToReg: 	   out STD_LOGIC;
 		RegDist, RegWrite:  	   out STD_LOGIC;
-		ALUSrc, branch, jump   	   out STD_LOGIC;
+		ALUSrc, branch, jump:      out STD_LOGIC;
 		jumpReg:		   out STD_LOGIC;
 		jumpLink:		   out STD_LOGIC
 	);
 end MainControlDecoder;
 
 architecture Behavioural of MainControlDecoder is 
-	SIGNAL ControlSignals: STD_LOGIC_VECTOR(11 DOWNTO 0);
+	SIGNAL ControlSignals: STD_LOGIC_VECTOR(10 DOWNTO 0);
 begin
 	process(all) begin
 		case opcode is 
 			when "000000" => -- RTYPE or JR
 				if (funct = "001000") then 
-					ControlSignals <= "00000000100" -- JR
+					ControlSignals <= "00000000100"; -- JR
 				else 
 					ControlSignals <= "11000000010"; -- RTYPE
 				end if;
-			when "100011" => ControlSignals <= "10100100000"; –– LW
-			when "101011" => ControlSignals <= "00101000000"; –– SW
-			when "000100" => ControlSignals <= "00010000001"; –– BEQ
-			when "000010" => ControlSignals <= "00000010000"; –– J
+			when "100011" => ControlSignals <= "10100100000"; -- LW
+			when "101011" => ControlSignals <= "00101000000"; -- SW
+			when "000100" => ControlSignals <= "00010000001"; -- BEQ
+			when "000010" => ControlSignals <= "00000010000"; -- J
 			when "000011" => ControlSignals <= "00000011000"; -- JAL  
-			when "001000" | "001100" | "001101" => ControlSignals <= "10100000000"; –– Itype
-			when others =>   ControlSignals <= "–––––––––--"; –– illegal op
+			when "001000" | "001100" | "001101" => ControlSignals <= "10100000000"; -- Itype
+			when others =>   ControlSignals <= "-----------"; -- illegal op
 		end case;
 	end process;
 	(RegWrite, RegDist, ALUSrc, branch, MemWrite, MemToReg, jump, jumpReg, jumpLink, ALUOp(1 DOWNTO 0)) <= ControlSignals;
 end Behavioural;
 
 -- ALU decoder.
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
 
 entity ALUControlDecoder is 
 	port(
 		opcode:        in STD_LOGIC_VECTOR(5 DOWNTO 0);
-		funct: 		 in STD_LOGIC_VECTOR(31 DOWNTO 26);
+		funct: 		 in STD_LOGIC_VECTOR(5 DOWNTO 0);
 		ALUOp: 		   in STD_LOGIC_VECTOR(1 DOWNTO 0);
 		ALUControl:    out STD_LOGIC_VECTOR(2 DOWNTO 0)
 	);
@@ -64,13 +66,13 @@ begin
 			when "01" => ALUControl <= "110"; -- Sub, for beq.
 			when others => -- RTYPE
 				case funct is 
-					when "100000" => ALUControl <= "010" -- add.
-					when "100001" => ALUControl <= "110" -- sub.
-					when "100100" => ALUControl <= "000" -- and.
-					when "100101" => ALUControl <= "001" -- or.
-					when "101010" => ALUControl <= "111" -- stl.
-					when "100111" => ALUControl <= "101" -- nor.
-					when others   => ALUControl <= "---" -- illegal.
+					when "100000" => ALUControl <= "010"; -- add.
+					when "100001" => ALUControl <= "110"; -- sub.
+					when "100100" => ALUControl <= "000"; -- and.
+					when "100101" => ALUControl <= "001"; -- or.
+					when "101010" => ALUControl <= "111"; -- stl.
+					when "100111" => ALUControl <= "101";-- nor.
+					when others   => ALUControl <= "---"; -- illegal.
 				end case;
 		end case;
 	end process;

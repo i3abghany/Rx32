@@ -23,7 +23,7 @@ architecture Structural of Datapath is
 	component ALU is 
 		port(
 			a, b: 	                  in STD_LOGIC_VECTOR(31 DOWNTO 0);
-			ALUControl:                in STD_LOGIC_VECTOR(1 DOWNTO 0);
+			ALUControl:                in STD_LOGIC_VECTOR(2 DOWNTO 0);
 			result:                  out STD_LOGIC_VECTOR(31 DOWNTO 0);
 			ZeroFlag:    	                             out STD_LOGIC
 		);
@@ -88,27 +88,42 @@ architecture Structural of Datapath is
 	SIGNAL Result:			       	    STD_LOGIC_VECTOR(31 DOWNTO 0); -- value from memory or ALU.
 	SIGNAL ResultToRegFile:             STD_LOGIC_VECTOR(31 DOWNTO 0); -- value from Result or PC+4
 	SIGNAL SrcA, SrcB:			        STD_LOGIC_VECTOR(31 DOWNTO 0);
-	SIGNAL ReturnReg:					STD_LOGIC_VECTOR(4 DOWNTO 0) := X"1F";
+	SIGNAL IsBranchPC:			        STD_LOGIC_VECTOR(31 DOWNTO 0);      
+	SIGNAL IsJumpPC:			        STD_LOGIC_VECTOR(31 DOWNTO 0);  
+    SIGNAL WriteRegFinal:			    STD_LOGIC_VECTOR(4 DOWNTO 0);                   
+	SIGNAL ReturnReg:					STD_LOGIC_VECTOR(4 DOWNTO 0) := "11111";
 begin
 	-- Next PC logic.
-	PCAdder: Adder(PC, X"00000004", PCplus4);
+	PCAdder: Adder  port map(a => PC, b => X"00000004", y => PCplus4);
 	PCJump <= (PCplus4(31 DOWNTO 28) & instr(25 DOWNTO 0) & "00");
-	PCReg:              Reg: generic map(32) port map(clk, reset, PCNext, PC);
-	SS:                 SignExtend port map(instr(15 DOWNTO 0), SignImm);
-	MulBy4:             SL2 port map(SignImm, MulImm);
-	BranchAdder:        Adder port map(PCplus4, MulImm, PCBranch);
-	BranchMux:          Mux2 generic map(32) port map(PCplus4, PCBranch, PCSrc, IsBranchPC);
-	JumpMux:            Mux2 generic map(32) port map(IsBranchPC, PCJump, jump, IsJumpPC);
-	JRMux:              Mux2 generic map(32) port map(IsJumpPC, SrcA, jumpReg, PCNext);
+	PCReg:              Reg generic map(32) port map(clk => clk, reset => reset, d => PCNext, q => PC);
+	SS:                 SignExtend port map(a => instr(15 DOWNTO 0), y => SignImm);
+	MulBy4:             SL2 port map(a => SignImm, y => MulImm);
+	BranchAdder:        Adder port map(a => PCplus4, b => MulImm, y => PCBranch);
+	BranchMux:          Mux2 generic map(32) port map(d0 => PCplus4, d1 => PCBranch, s => PCSrc, y => IsBranchPC);
+	JumpMux:            Mux2 generic map(32) port map(d0 => IsBranchPC, d1 => PCJump, s => jump, y => IsJumpPC);
+	JRMux:              Mux2 generic map(32) port map(d0 => IsJumpPC, d1 => SrcA, s => jumpReg, y => PCNext);
 	
 	-- Register File Logic.
-	Mux2 RegMux: generic map(5) port map(instr(20 DOWNTO 16), instr(15 DOWNTO 11), RegDist, WriteReg);
-	Mux2 ResultMUX: generic map(32) port map(ALUOut, ReadData, MemToReg, Result); 
-	Mux2 JALMux:    generic map(32) port map(Result, PCplus4, jumpLink, ResultToRegFile);
-	Mux2 JALAddMux: generic map(32) port map(WriteReg, ReturnReg, jumpLink, WriteRegFinal);
-	RF: RegFile port map(clk, RegWrite, instr(25 DOWNTO 21), instr(21 DOWNTO 16), WriteReg, ResultToRegFile, SrcA, WriteData);
+	RegMux: Mux2 generic map(5) port map(d0 => instr(20 DOWNTO 16), d1 => instr(15 DOWNTO 11), s => RegDist, y => WriteReg);
+	ResultMUX: Mux2 generic map(32) port map(d0 => ALUOut, d1 => ReadData, s => MemToReg, y => Result); 
+	JALMux:    Mux2 generic map(32) port map(d0 => Result, d1 => PCplus4, s => jumpLink, y => ResultToRegFile);
+	JALAddMux: Mux2 generic map(5) port map(d0 => WriteReg, d1 => ReturnReg, s => jumpLink, y => WriteRegFinal);
+	RF: RegFile port map(  
+	                       clk => clk, WE3 => RegWrite, A1 => instr(25 DOWNTO 21), 
+	                       A2 => instr(20 DOWNTO 16), WA3 => WriteRegFinal, 
+	                       WD3 => ResultToRegFile, RD1 => SrcA, RD2 => WriteData
+	                     );
+	
+--	port(
+--			clk:                                         in STD_LOGIC;
+--			WE3:                                         in STD_LOGIC;
+--			A1, A2, WA3:              in STD_LOGIC_VECTOR(4 DOWNTO 0);
+--			WD3:                     in STD_LOGIC_VECTOR(31 DOWNTO 0);
+--			RD1, RD2:               out STD_LOGIC_VECTOR(31 DOWNTO 0)
+--		);
 	
 	-- ALU logic.
-	SrcBMux: Mux2 generic map(32) port map(WriteData, SignImm, ALUSrc, SrcB);
-	ALU: MainALU port map(SrcA, SrcB, ALUControl, ALUOut, ZeroFlag);
+	SrcBMux: Mux2 generic map(32) port map(d0 => WriteData, d1 => SignImm, s => ALUSrc, y => SrcB);
+	MainALU: ALU port map(a => SrcA, b => SrcB, ALUControl => ALUControl, result => ALUOut, ZeroFlag => ZeroFlag);
 end Structural;

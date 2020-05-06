@@ -39,6 +39,6 @@ architecture Structural of Controller is
 	SIGNAL branch: STD_LOGIC;
 begin
 	MainDecoder: MainControlDecoder port map(opcode, funct, ALUOp, MemWrite, MemToReg, RegDist, RegWrite, ALUSrc, branch, jump, jumpReg, jumpLink);
-	ALUDecoder: ALUControlDecoder port map(funct, ALUOp, ALUControl);
+	ALUDecoder: ALUControlDecoder port map(opcode, funct, ALUOp, ALUControl);
 	PCSrc <= branch AND ZeroFlag;
 end Structural;

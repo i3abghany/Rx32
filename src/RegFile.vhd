@@ -1,6 +1,8 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
-use IEEE.NUMERIC_STD_UNSIGNED.all;
+use IEEE.NUMERIC_STD.all;
+use IEEE.STD_LOGIC_UNSIGNED.all;
+
 entity RegFile is 
 	port(
 		clk: in STD_LOGIC;
@@ -16,22 +18,22 @@ architecture Behavioral of RegFile is
 	SIGNAL mem: RamType;
 begin 
 	process(clk) begin
-		if(rising_edge(clk)) begin
+		if(rising_edge(clk)) then
 			if (WE3 = '1') then 
-				mem(TO_INTEGER(WA3)) <= WD3;
+				mem(CONV_INTEGER(WA3)) <= WD3;
 			end if;
 		end if;
 	end process;
 	
 	process(all) begin
-		if(TO_INTEGER(A1) = '0') then 
+		if(A1 = "00000") then 
 			RD1 <= X"00000000";
-		else RD1 <= mem(TO_INTEGER(A1));
+		else RD1 <= mem(CONV_INTEGER(A1));
 		end if;
 		
-		if(TO_INTEGER(A2) = '0') then 
+		if(A2 = "00000") then 
 			RD2 <= X"00000000";
-		else RD2 <= mem(TO_INTEGER(A2));
+		else RD2 <= mem(CONV_INTEGER(A2));
 		end if;
 	end process;
 end Behavioral;
