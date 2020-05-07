@@ -11,6 +11,6 @@ end SignExtend;
 
 architecture Behavioral of SignExtend is 
 begin
-	y <= STD_LOGIC_VECTOR(RESIZE(SIGNED(a), y'length));
+	 y <= STD_LOGIC_VECTOR(RESIZE(SIGNED(a), y'length));
 end Behavioral;
 

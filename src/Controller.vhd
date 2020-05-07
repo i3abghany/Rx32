@@ -11,7 +11,8 @@ entity Controller is
 		ALUSrc, PCSrc:                   out STD_LOGIC;
 		jump:                            out STD_LOGIC;
 		jumpReg:                         out STD_LOGIC;
-		jumpLink:                        out STD_LOGIC
+		jumpLink:                        out STD_LOGIC;
+		LUIEnable:                       out STD_LOGIC
 	);
 end Controller;
 
@@ -21,6 +22,7 @@ architecture Structural of Controller is
 			opcode:  in STD_LOGIC_VECTOR(5 DOWNTO 0);
 			funct:	 in STD_LOGIC_VECTOR(5 DOWNTO 0);
 			ALUOp:  out STD_LOGIC_VECTOR(1 DOWNTO 0);
+			LUIEnable:                 out STD_LOGIC;
 			MemWrite, MemToReg: 	   out STD_LOGIC;
 			RegDist, RegWrite:  	   out STD_LOGIC;
 			ALUSrc, branch, jump:	   out STD_LOGIC;
@@ -30,7 +32,7 @@ architecture Structural of Controller is
 	component ALUControlDecoder is 
 		port(
 			opcode:        in STD_LOGIC_VECTOR(5 DOWNTO 0);
-			funct: 		 in STD_LOGIC_VECTOR(31 DOWNTO 26);
+			funct: 		   in STD_LOGIC_VECTOR(5 DOWNTO 0);
 			ALUOp: 		   in STD_LOGIC_VECTOR(1 DOWNTO 0);
 			ALUControl:   out STD_LOGIC_VECTOR(2 DOWNTO 0)	
 		);
@@ -38,7 +40,14 @@ architecture Structural of Controller is
 	SIGNAL ALUOp: STD_LOGIC_VECTOR(1 DOWNTO 0);
 	SIGNAL branch: STD_LOGIC;
 begin
-	MainDecoder: MainControlDecoder port map(opcode, funct, ALUOp, MemWrite, MemToReg, RegDist, RegWrite, ALUSrc, branch, jump, jumpReg, jumpLink);
-	ALUDecoder: ALUControlDecoder port map(opcode, funct, ALUOp, ALUControl);
-	PCSrc <= branch AND ZeroFlag;
+	MainDecoder: MainControlDecoder port map(opcode => opcode, funct => funct, ALUOp => ALUOp,
+	                                         MemWrite => MemWrite, MemToReg => MemToReg,
+	                                         RegDist => RegDist, RegWrite => RegWrite, ALUSrc => ALUSrc,
+	                                         branch => branch, jump => jump, jumpReg => jumpReg, 
+	                                         jumpLink => jumpLink, LUIEnable => LUIEnable);
+	ALUDecoder: ALUControlDecoder   port map(opcode => opcode, 
+                                             funct => funct, 
+                                             ALUOp => ALUOp,
+                                             ALUControl => ALUControl);
+    PCSrc <= branch AND ZeroFlag;
 end Structural;

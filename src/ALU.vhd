@@ -25,7 +25,6 @@ begin
             when "001" => 
                 result  <= a OR b;
             when "111" => 
---                result  <= X"00000001" when ((a < b) = '1') else X"00000000";
                 if (a < b) then result <= X"00000001"; else result <= X"00000000"; end if;
             when "101" => result <= a NOR b;
             when others =>

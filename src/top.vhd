@@ -1,5 +1,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
+use IEEE.NUMERIC_STD.all;
+use IEEE.STD_LOGIC_UNSIGNED.all;
 
 entity top is 
 	port(
@@ -43,10 +45,13 @@ architecture test of top is
 		);
 	end component;
 	SIGNAL PC, instr, ReadData: STD_LOGIC_VECTOR(31 DOWNTO 0);
-    --SIGNAL MemWrite: STD_LOGIC;
-    --SIGNAL DataAddr, WriteData: STD_LOGIC_VECTOR(31 DOWNTO 0);
+
 begin
-	Processor:   Mips port map(clk, reset, PC, instr, MemWrite, DataAddr, WriteData, ReadData);
-	DataMemory:  DMem generic map(32, 256) port map(clk, MemWrite, DataAddr, WriteData, ReadData);
-	InstrMemory: IMem generic map(32, 256) port map(PC, instr);
+	Processor:   Mips port map(clk => clk, reset => reset, PC => PC, 
+	                           instr => instr, MemWrite => MemWrite, 
+	                           ALUOut => DataAddr, WriteData => WriteData,
+	                           ReadData => ReadData);
+	DataMemory:  DMem generic map(32, 256) port map(clk => clk, WE => MemWrite, A => DataAddr, 
+	                                                WD => WriteData, RD => ReadData);
+	InstrMemory: IMem generic map(32, 32) port map(A => PC, RD => instr);
 end test;
