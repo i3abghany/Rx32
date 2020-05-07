@@ -119,4 +119,5 @@ begin
 	-- ALU logic.
 	SrcBMux: Mux2 generic map(32) port map(d0 => WriteData, d1 => SignImm, s => ALUSrc, y => SrcB);
 	MainALU: ALU port map(a => SrcA, b => SrcB, ALUControl => ALUControl, result => ALUOut, ZeroFlag => ZeroFlag);
+	
 end Structural;
