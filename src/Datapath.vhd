@@ -80,6 +80,12 @@ architecture Structural of Datapath is
 		);
 	end component;
 	
+	component SL15 is 
+	   port (
+	       a: in STD_LOGIC_VECTOR(31 DOWNTO 0);
+	       y: out STD_LOGIC_VECTOR(31 DOWNTO 0)
+	   );
+	end component;
 	
 	SIGNAL PCplus4, PCJump, PCNext:             STD_LOGIC_VECTOR(31 DOWNTO 0);
 	SIGNAL SignImm:                             STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -94,6 +100,7 @@ architecture Structural of Datapath is
     SIGNAL WriteRegFinal:			    STD_LOGIC_VECTOR(4 DOWNTO 0);                   
 	SIGNAL ReturnReg:					STD_LOGIC_VECTOR(4 DOWNTO 0) := "11111";
     SIGNAL LUIorResult:                 STD_LOGIC_VECTOR(31 DOWNTO 0);
+    SIGNAL UpperConst:                  STD_LOGIC_VECTOR(31 DOWNTO 0);
 begin
 	-- Next PC logic.
 	PCJump <= (PCplus4(31 DOWNTO 28) & instr(25 DOWNTO 0) & "00");
@@ -107,11 +114,12 @@ begin
 	JRMux:              Mux2 generic map(32) port map(d0 => IsJumpPC, d1 => SrcA, s => jumpReg, y => PCNext);
 	
 	-- Register File Logic.
-	RegMux: Mux2 generic map(5)     port map(d0 => instr(20 DOWNTO 16), d1 => instr(15 DOWNTO 11), s => RegDist, y => WriteReg);
-	JALAddMux: Mux2 generic map(5)  port map(d0 => WriteReg, d1 => ReturnReg, s => jumpLink, y => WriteRegFinal);
-	ResultMUX: Mux2 generic map(32) port map(d0 => ALUOut, d1 => ReadData, s => MemToReg, y => Result); 
-	JALMux:    Mux2 generic map(32) port map(d0 => Result, d1 => PCplus4, s => jumpLink, y => ResultToRegFile);
-	LUIMux:    Mux2 generic map(32) port map(d0 => ResultToRegFile, d1 => SignImm, s => LUIEnable, y => LUIorResult);
+	InstrRegMux: Mux2 generic map(5)     port map(d0 => instr(20 DOWNTO 16), d1 => instr(15 DOWNTO 11), s => RegDist, y => WriteReg);
+	JALRegMux: Mux2 generic map(5)       port map(d0 => WriteReg, d1 => ReturnReg, s => jumpLink, y => WriteRegFinal);
+	ResultMUX: Mux2 generic map(32)      port map(d0 => ALUOut, d1 => ReadData, s => MemToReg, y => Result); 
+	LUIConst: SL15 port map(a => SignImm, y => UpperConst);
+	JALResultMux:    Mux2 generic map(32) port map(d0 => Result, d1 => PCplus4, s => jumpLink, y => ResultToRegFile);
+	LUIMux:    Mux2 generic map(32) port map(d0 => ResultToRegFile, d1 => UpperConst, s => LUIEnable, y => LUIorResult);
 	RF: RegFile port map(clk => clk, WE3 => RegWrite, A1 => instr(25 DOWNTO 21), 
 	                     A2 => instr(20 DOWNTO 16), WA3 => WriteRegFinal, 
 	                     WD3 => LUIorResult, RD1 => SrcA, RD2 => WriteData

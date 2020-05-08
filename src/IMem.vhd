@@ -17,7 +17,7 @@ end IMem;
 architecture Behavioral of IMem is 
 	TYPE   RamType is array(0 TO Capacity - 1) of STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0);
 	CONSTANT IRAM: RamType := (
-            X"20020005",
+	        X"20020005", 
             X"2003000c",
             X"2067fff7",
             X"00e22025",
@@ -50,17 +50,7 @@ architecture Behavioral of IMem is
             X"00000000",
             X"00000000"
 	);
---    CONSTANT IRAM: RamType := (
---        X"00853820",
---        X"00000000"
---    );
-begin 
---    process(all) begin
---        for i in 0 to (Capacity - 1) loop
---            IRAM(i) <= (others => '0');
---        end loop;
---	end process;
-    
 	
+begin 
 	RD <= IRAM(CONV_INTEGER(A) / 4);
 end Behavioral;

@@ -16,7 +16,7 @@ entity MainControlDecoder is
 end MainControlDecoder;
 
 architecture Behavioural of MainControlDecoder is 
-	SIGNAL ControlSignals: STD_LOGIC_VECTOR(11 DOWNTO 0);
+	SIGNAL ControlSignals: STD_LOGIC_VECTOR(11 DOWNTO 0) := "000000000000";
 begin
 	process(all) begin
 		case opcode is 
@@ -31,7 +31,7 @@ begin
 			when "000100" => ControlSignals <= "000100000001"; -- BEQ
 			when "000010" => ControlSignals <= "000000100000"; -- J
 			when "000011" => ControlSignals <= "000000101000"; -- JAL
-			when "001111" => ControlSignals <= "110000000100"; -- LUI   
+			when "001111" => ControlSignals <= "100000000100"; -- LUI   
 			when "001000" | "001100" | "001101" => ControlSignals <= "101000000000"; -- Itype
 			when others =>   ControlSignals <= "------------"; -- illegal op
 		end case;
@@ -63,6 +63,8 @@ begin
 					when "001101" => ALUControl <= "001"; -- ori
 					when "100011" => ALUControl <= "010"; -- lw.
 					when "101011" => ALUControl <= "010"; -- sw.
+					when "001111" => ALUControl <= "010"; -- LUI.
+					when "000011" => ALUControl <= "010"; -- JAL.
 					when others   => ALUControl <= "---"; -- illegal.
 				end case;
 			when "01" => ALUControl <= "110"; -- Sub, for beq.

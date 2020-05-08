@@ -47,7 +47,17 @@ architecture SingleCycleStructural of Mips is
 			);
 	end component;
 	
-	SIGNAL ZeroFlag, MemToReg, RegWrite, RegDist, ALUSrc, PCSrc, jump, jumpReg, jumpLink, LUIEnable: STD_LOGIC;
+	SIGNAL ZeroFlag:  STD_LOGIC := '0';
+	SIGNAL MemToReg:  STD_LOGIC := '0';
+	SIGNAL RegWrite:  STD_LOGIC := '0';
+	SIGNAL RegDist:   STD_LOGIC := '0';
+	SIGNAL ALUSrc:    STD_LOGIC := '0';
+	SIGNAL PCSrc:     STD_LOGIC := '0';
+	SIGNAL jump:      STD_LOGIC := '0';
+	SIGNAL jumpReg:   STD_LOGIC := '0';
+	SIGNAL jumpLink:  STD_LOGIC := '0';
+	SIGNAL LUIEnable: STD_LOGIC := '0';
+	
 	SIGNAL ALUControl: STD_LOGIC_VECTOR(2 DOWNTO 0);
 begin
 	ControlUnit: Controller port map(
