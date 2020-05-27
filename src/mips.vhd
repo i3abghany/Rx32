@@ -17,7 +17,7 @@ architecture SingleCycleStructural of Mips is
 	component Controller is 
 		port(
 			opcode, funct: in STD_LOGIC_VECTOR(5 DOWNTO 0);
-			ALUControl:   out STD_LOGIC_VECTOR(2 DOWNTO 0);
+			ALUControl:   out STD_LOGIC_VECTOR(3 DOWNTO 0);
 			ZeroFlag:                         in STD_LOGIC;
 			MemWrite, MemToReg:              out STD_LOGIC; 
 			RegWrite, RegDist:               out STD_LOGIC;
@@ -39,12 +39,12 @@ architecture SingleCycleStructural of Mips is
 			jumpLink:                  	                       in STD_LOGIC;
 			LUIEnable:                                         in STD_LOGIC;
 			ZeroFlag:                                         out STD_LOGIC;
-			ALUControl: 	                in STD_LOGIC_VECTOR(2 DOWNTO 0);
+			ALUControl: 	                in STD_LOGIC_VECTOR(3 DOWNTO 0);
 			instr:                         in STD_LOGIC_VECTOR(31 DOWNTO 0);
 			ReadData: 		       in STD_LOGIC_VECTOR(31 DOWNTO 0);
 			PC:    			   out STD_LOGIC_VECTOR(31 DOWNTO 0);
 			ALUOut, WriteData:         out STD_LOGIC_VECTOR(31 DOWNTO 0)
-			);
+		);
 	end component;
 	
 	SIGNAL ZeroFlag:  STD_LOGIC := '0';
@@ -58,7 +58,7 @@ architecture SingleCycleStructural of Mips is
 	SIGNAL jumpLink:  STD_LOGIC := '0';
 	SIGNAL LUIEnable: STD_LOGIC := '0';
 	
-	SIGNAL ALUControl: STD_LOGIC_VECTOR(2 DOWNTO 0);
+	SIGNAL ALUControl: STD_LOGIC_VECTOR(3 DOWNTO 0);
 begin
 	ControlUnit: Controller port map(
             opcode => instr(31 DOWNTO 26), funct => instr(5 DOWNTO 0), ALUControl => ALUControl,

@@ -15,7 +15,7 @@ end RegFile;
 
 architecture Behavioral of RegFile is 
 	TYPE   RamType is array (31 DOWNTO 0) of STD_LOGIC_VECTOR(31 DOWNTO 0);
-	SIGNAL mem: RamType;
+	SIGNAL mem: RamType := (others => (others => '0'));
 begin 
 	process(clk) begin
 		if(rising_edge(clk)) then

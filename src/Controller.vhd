@@ -4,7 +4,7 @@ use IEEE.STD_LOGIC_1164.all;
 entity Controller is
 	port(
 		opcode, funct: in STD_LOGIC_VECTOR(5 DOWNTO 0);
-		ALUControl:   out STD_LOGIC_VECTOR(2 DOWNTO 0);
+		ALUControl:   out STD_LOGIC_VECTOR(3 DOWNTO 0);
 		ZeroFlag:                         in STD_LOGIC;
 		MemWrite, MemToReg:              out STD_LOGIC; 
 		RegWrite, RegDist:               out STD_LOGIC;
@@ -34,7 +34,7 @@ architecture Structural of Controller is
 			opcode:        in STD_LOGIC_VECTOR(5 DOWNTO 0);
 			funct: 		   in STD_LOGIC_VECTOR(5 DOWNTO 0);
 			ALUOp: 		   in STD_LOGIC_VECTOR(1 DOWNTO 0);
-			ALUControl:   out STD_LOGIC_VECTOR(2 DOWNTO 0)	
+			ALUControl:   out STD_LOGIC_VECTOR(3 DOWNTO 0)	
 		);
 	end component;
 	SIGNAL ALUOp: STD_LOGIC_VECTOR(1 DOWNTO 0);

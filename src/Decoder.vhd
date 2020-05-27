@@ -48,7 +48,7 @@ entity ALUControlDecoder is
 		opcode:        in STD_LOGIC_VECTOR(5 DOWNTO 0);
 		funct: 		   in STD_LOGIC_VECTOR(5 DOWNTO 0);
 		ALUOp: 		   in STD_LOGIC_VECTOR(1 DOWNTO 0);
-		ALUControl:    out STD_LOGIC_VECTOR(2 DOWNTO 0)
+		ALUControl:    out STD_LOGIC_VECTOR(3 DOWNTO 0)
 	);
 end ALUControlDecoder;
 
@@ -58,25 +58,26 @@ begin
 		case ALUOp is
 			when "00" =>
 				case opcode is 
-					when "001000" => ALUControl <= "010"; -- addi
-					when "001100" => ALUControl <= "000"; -- andi
-					when "001101" => ALUControl <= "001"; -- ori
-					when "100011" => ALUControl <= "010"; -- lw.
-					when "101011" => ALUControl <= "010"; -- sw.
-					when "001111" => ALUControl <= "010"; -- LUI.
-					when "000011" => ALUControl <= "010"; -- JAL.
-					when others   => ALUControl <= "---"; -- illegal.
+					when "001000" => ALUControl <= "0010"; -- addi
+					when "001100" => ALUControl <= "0000"; -- andi
+					when "001101" => ALUControl <= "0001"; -- ori
+					when "100011" => ALUControl <= "0010"; -- lw.
+					when "101011" => ALUControl <= "0010"; -- sw.
+					when "001111" => ALUControl <= "0010"; -- LUI.
+					when "000011" => ALUControl <= "0010"; -- JAL.
+					when others   => ALUControl <= "----"; -- illegal.
 				end case;
-			when "01" => ALUControl <= "110"; -- Sub, for beq.
+			when "01" => ALUControl <= "0110"; -- Sub, for beq.
 			when others => -- RTYPE
 				case funct is 
-					when "100000" => ALUControl <= "010"; -- add.
-					when "100010" => ALUControl <= "110"; -- sub.
-					when "100100" => ALUControl <= "000"; -- and.
-					when "100101" => ALUControl <= "001"; -- or.
-					when "101010" => ALUControl <= "111"; -- stl.
-					when "100111" => ALUControl <= "101";-- nor.
-					when others   => ALUControl <= "---"; -- illegal.
+					when "100000" => ALUControl <= "0010"; -- add.
+					when "100010" => ALUControl <= "0110"; -- sub.
+					when "100100" => ALUControl <= "0000"; -- and.
+					when "100101" => ALUControl <= "0001"; -- or.
+					when "101010" => ALUControl <= "0111"; -- slt.
+					when "100111" => ALUControl <= "0101"; -- NOR.
+					when "000000" => ALUControl <= "0100"; -- SLL
+					when others   => ALUControl <= "----"; -- illegal.
 				end case;
 		end case;
 	end process;

@@ -6,7 +6,8 @@ usE IEEE.NUMERIC_STD.all;
 entity ALU is 
 	port(
 		a, b: 	   in STD_LOGIC_VECTOR(31 DOWNTO 0);
-		ALUControl: in STD_LOGIC_VECTOR(2 DOWNTO 0);
+		ALUControl: in STD_LOGIC_VECTOR(3 DOWNTO 0);
+		shamt:      in STD_LOGIC_VECTOR(4 DOWNTO 0);
 		result:   out STD_LOGIC_VECTOR(31 DOWNTO 0);
 		ZeroFlag:    	              out STD_LOGIC
 	);
@@ -16,18 +17,19 @@ architecture Behavioral of ALU is
 begin
     process (all) begin
         case ALUControl is 
-            when "010" =>
+            when "0010" =>
                 result  <= a + b;
-            when "110" => 
+            when "0110" => 
                 result  <= a - b;
-            when "000" => 
+            when "0000" => 
                 result  <= a AND b;
-            when "001" => 
+            when "0001" => 
                 result  <= a OR b;
-            when "111" => 
+            when "0111" => 
                 if (a < b) then result <= X"00000001"; else result <= X"00000000"; end if;
-            when "101" => result <= a NOR b;
-            when others =>
+            when "0101" => result <= a NOR b;
+            when "0100" => result <= a sll CONV_INTEGER(shamt); 
+            when others => 
                 result <= X"--------";
         end case;
     end process;

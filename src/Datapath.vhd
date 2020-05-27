@@ -12,7 +12,7 @@ entity Datapath is
 		jumpLink:                          in STD_LOGIC;
 		LUIEnable:                        in STD_LOGIC;
 		ZeroFlag:                                             out STD_LOGIC;
-		ALUControl: 			   in STD_LOGIC_VECTOR( 2 DOWNTO 0);
+		ALUControl: 			   in STD_LOGIC_VECTOR(3 DOWNTO 0);
 		instr:                             in STD_LOGIC_VECTOR(31 DOWNTO 0);
 		ReadData: 			   in STD_LOGIC_VECTOR(31 DOWNTO 0);
 		PC:    			       buffer STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -24,7 +24,8 @@ architecture Structural of Datapath is
 	component ALU is 
 		port(
 			a, b: 	                  in STD_LOGIC_VECTOR(31 DOWNTO 0);
-			ALUControl:                in STD_LOGIC_VECTOR(2 DOWNTO 0);
+			ALUControl:                in STD_LOGIC_VECTOR(3 DOWNTO 0);
+			shamt:                     in STD_LOGIC_VECTOR(4 DOWNTO 0);
 			result:                  out STD_LOGIC_VECTOR(31 DOWNTO 0);
 			ZeroFlag:    	                             out STD_LOGIC
 		);
@@ -126,6 +127,6 @@ begin
                      );
 	-- ALU logic.
 	SrcBMux: Mux2 generic map(32) port map(d0 => WriteData, d1 => SignImm, s => ALUSrc, y => SrcB);
-	MainALU: ALU port map(a => SrcA, b => SrcB, ALUControl => ALUControl, result => ALUOut, ZeroFlag => ZeroFlag);
+	MainALU: ALU port map(a => SrcA, b => SrcB, ALUControl => ALUControl, shamt => instr(10 DOWNTO 6), result => ALUOut, ZeroFlag => ZeroFlag);
 	
 end Structural;
