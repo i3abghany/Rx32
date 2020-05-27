@@ -21,9 +21,9 @@ begin
 	process(all) begin
 		case opcode is 
 			when "000000" => -- RTYPE or JR
-				if (funct = "001000") then 
-					ControlSignals <= "000000010000"; -- JR
-				else 
+				if (funct = "001000") then
+					ControlSignals <= "000000010000"; -- JR 
+				else
 					ControlSignals <= "110000000010"; -- RTYPE
 				end if;
 			when "100011" => ControlSignals <= "101001000000"; -- LW
@@ -32,7 +32,7 @@ begin
 			when "000010" => ControlSignals <= "000000100000"; -- J
 			when "000011" => ControlSignals <= "000000101000"; -- JAL
 			when "001111" => ControlSignals <= "100000000100"; -- LUI   
-			when "001000" | "001100" | "001101" => ControlSignals <= "101000000000"; -- Itype
+			when "001000" | "001100" | "001101" | "001010" => ControlSignals <= "101000000000"; -- Itype
 			when others =>   ControlSignals <= "------------"; -- illegal op
 		end case;
 	end process;
@@ -60,6 +60,7 @@ begin
 				case opcode is 
 					when "001000" => ALUControl <= "0010"; -- addi
 					when "001100" => ALUControl <= "0000"; -- andi
+                    when "001010" => ALUControl <= "0111"; -- slti.
 					when "001101" => ALUControl <= "0001"; -- ori
 					when "100011" => ALUControl <= "0010"; -- lw.
 					when "101011" => ALUControl <= "0010"; -- sw.
