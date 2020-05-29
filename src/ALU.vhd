@@ -29,6 +29,7 @@ begin
                 if (a < b) then result <= X"00000001"; else result <= X"00000000"; end if;
             when "0101" => result <= a NOR b;
             when "0100" => result <= b sll CONV_INTEGER(shamt); 
+            when "1100" => result <= b srl CONV_INTEGER(shamt);
             when others => 
                 result <= X"--------";
         end case;

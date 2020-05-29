@@ -44,8 +44,7 @@ architecture test of top is
 			RD: out STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0)
 		);
 	end component;
-	SIGNAL PC, instr, ReadData: STD_LOGIC_VECTOR(31 DOWNTO 0);
-
+	SIGNAL PC, instr, ReadData: STD_LOGIC_VECTOR(31 DOWNTO 0) := X"00000000";
 begin
 	Processor:   Mips port map(clk => clk, reset => reset, PC => PC, 
 	                           instr => instr, MemWrite => MemWrite, 

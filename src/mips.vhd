@@ -24,6 +24,7 @@ architecture SingleCycleStructural of Mips is
 			ALUSrc, PCSrc:                   out STD_LOGIC;
 			jump:                            out STD_LOGIC;
 			jumpReg:			             out STD_LOGIC;
+			LH:                              out STD_LOGIC;
 			jumpLink:			             out STD_LOGIC;
 			LUIEnable:                       out STD_LOGIC
 		);
@@ -38,6 +39,7 @@ architecture SingleCycleStructural of Mips is
 			jumpReg:		 			                       in STD_LOGIC;
 			jumpLink:                  	                       in STD_LOGIC;
 			LUIEnable:                                         in STD_LOGIC;
+			LH:                                                in STD_LOGIC;
 			ZeroFlag:                                         out STD_LOGIC;
 			ALUControl: 	                in STD_LOGIC_VECTOR(3 DOWNTO 0);
 			instr:                         in STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -57,6 +59,7 @@ architecture SingleCycleStructural of Mips is
 	SIGNAL jumpReg:   STD_LOGIC := '0';
 	SIGNAL jumpLink:  STD_LOGIC := '0';
 	SIGNAL LUIEnable: STD_LOGIC := '0';
+	SIGNAL LH:        STD_LOGIC := '0';
 	
 	SIGNAL ALUControl: STD_LOGIC_VECTOR(3 DOWNTO 0);
 begin
@@ -64,12 +67,12 @@ begin
             opcode => instr(31 DOWNTO 26), funct => instr(5 DOWNTO 0), ALUControl => ALUControl,
             ZeroFlag => ZeroFlag, MemWrite => MemWrite, MemToReg => MemToReg, RegWrite => RegWrite, 
             RegDist => RegDist, ALUSrc => ALUSrc, PCSrc => PCSrc, jump => jump, jumpReg => jumpReg,
-            jumpLink => jumpLink, LUIEnable => LUIEnable
+            jumpLink => jumpLink, LUIEnable => LUIEnable, LH => LH
 		);
 	MainDataPath: Datapath port map(
             clk => clk, reset => reset, MemToReg => MemToReg, PCSrc => PCSrc, ALUSrc => ALUSrc, 
             RegDist => RegDist, RegWrite => RegWrite, jump => jump, jumpReg => jumpReg, jumpLink => jumpLink,
             LUIEnable => LUIEnable, ZeroFlag => ZeroFlag, ALUControl => ALUControl, instr => instr, 
-            ReadData => ReadData, PC => PC, ALUOut => ALUOut, WriteData => WriteData 
+            ReadData => ReadData, PC => PC, ALUOut => ALUOut, WriteData => WriteData, LH => LH
 	);
 end SingleCycleStructural;

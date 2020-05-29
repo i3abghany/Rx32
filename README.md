@@ -5,7 +5,7 @@ Single cycle architecture MIPS processor implementation in VHDL(WIP).
 Available in Schematic.pdf
 
 # Supported instructions:
-add, sub, and, or, nor, stl, addi, andi, ori, lw, sw, j, jr, jal, sll, lui
+add, sub, and, or, nor, stl, addi, andi, ori, lw, sw, j, jr, jal, sll, srl, lui, lh
 
 # TODO: 
 * Factor out the IMem entity to fetch the instruction from a separate file.

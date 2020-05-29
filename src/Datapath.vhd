@@ -10,7 +10,8 @@ entity Datapath is
 		RegWrite, jump:                		               in STD_LOGIC;
 		jumpReg:		 			       in STD_LOGIC;
 		jumpLink:                          in STD_LOGIC;
-		LUIEnable:                        in STD_LOGIC;
+		LUIEnable:                         in STD_LOGIC;
+		LH:                                in STD_LOGIC;
 		ZeroFlag:                                             out STD_LOGIC;
 		ALUControl: 			   in STD_LOGIC_VECTOR(3 DOWNTO 0);
 		instr:                             in STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -102,6 +103,9 @@ architecture Structural of Datapath is
 	SIGNAL ReturnReg:					STD_LOGIC_VECTOR(4 DOWNTO 0) := "11111";
     SIGNAL LUIorResult:                 STD_LOGIC_VECTOR(31 DOWNTO 0);
     SIGNAL UpperConst:                  STD_LOGIC_VECTOR(31 DOWNTO 0);
+    SIGNAL CorrectHalf:                 STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL HalfWord:                    STD_LOGIC_VECTOR(31 DOWNTO 0);
+    SIGNAL ReadDataFinal:               STD_LOGIC_VECTOR(31 DOWNTO 0);
 begin
 	-- Next PC logic.
 	PCJump <= (PCplus4(31 DOWNTO 28) & instr(25 DOWNTO 0) & "00");
@@ -115,9 +119,13 @@ begin
 	JRMux:              Mux2 generic map(32) port map(d0 => IsJumpPC, d1 => SrcA, s => jumpReg, y => PCNext);
 	
 	-- Register File Logic.
-	InstrRegMux: Mux2 generic map(5)     port map(d0 => instr(20 DOWNTO 16), d1 => instr(15 DOWNTO 11), s => RegDist, y => WriteReg);
-	JALRegMux: Mux2 generic map(5)       port map(d0 => WriteReg, d1 => ReturnReg, s => jumpLink, y => WriteRegFinal);
-	ResultMUX: Mux2 generic map(32)      port map(d0 => ALUOut, d1 => ReadData, s => MemToReg, y => Result); 
+	InstrRegMux: Mux2 generic map(5)       port map(d0 => instr(20 DOWNTO 16), d1 => instr(15 DOWNTO 11), s => RegDist, y => WriteReg);
+	JALRegMux:   Mux2 generic map(5)       port map(d0 => WriteReg, d1 => ReturnReg, s => jumpLink, y => WriteRegFinal);
+	
+	HalvesMUX:   Mux2 generic map(16)      port map(d0 => ReadData(15 DOWNTO 0), d1 => ReadData(31 DOWNTO 16), s => ALUOut(1), y => CorrectHalf);
+	LHConst:     SignExtend port map(a => CorrectHalf, y => HalfWord);
+	ReadDataMux: Mux2 generic map(32)      port map(d0 => ReadData, d1 => HalfWord, s => LH, y => ReadDataFinal);
+	ResultMUX:   Mux2 generic map(32)      port map(d0 => ALUOut, d1 => ReadDataFinal, s => MemToReg, y => Result);
 	LUIConst: SL15 port map(a => SignImm, y => UpperConst);
 	JALResultMux:    Mux2 generic map(32) port map(d0 => Result, d1 => PCplus4, s => jumpLink, y => ResultToRegFile);
 	LUIMux:    Mux2 generic map(32) port map(d0 => ResultToRegFile, d1 => UpperConst, s => LUIEnable, y => LUIorResult);

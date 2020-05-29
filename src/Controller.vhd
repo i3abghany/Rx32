@@ -12,6 +12,7 @@ entity Controller is
 		jump:                            out STD_LOGIC;
 		jumpReg:                         out STD_LOGIC;
 		jumpLink:                        out STD_LOGIC;
+		LH:                              out STD_LOGIC;
 		LUIEnable:                       out STD_LOGIC
 	);
 end Controller;
@@ -25,6 +26,7 @@ architecture Structural of Controller is
 			LUIEnable:                 out STD_LOGIC;
 			MemWrite, MemToReg: 	   out STD_LOGIC;
 			RegDist, RegWrite:  	   out STD_LOGIC;
+			LH:                        out STD_LOGIC;
 			ALUSrc, branch, jump:	   out STD_LOGIC;
 			jumpReg, JumpLink:         out STD_LOGIC
 		);
@@ -44,7 +46,7 @@ begin
 	                                         MemWrite => MemWrite, MemToReg => MemToReg,
 	                                         RegDist => RegDist, RegWrite => RegWrite, ALUSrc => ALUSrc,
 	                                         branch => branch, jump => jump, jumpReg => jumpReg, 
-	                                         jumpLink => jumpLink, LUIEnable => LUIEnable);
+	                                         jumpLink => jumpLink, LUIEnable => LUIEnable, LH => LH);
 	ALUDecoder: ALUControlDecoder   port map(opcode => opcode, 
                                              funct => funct, 
                                              ALUOp => ALUOp,

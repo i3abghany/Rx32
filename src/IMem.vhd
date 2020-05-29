@@ -13,14 +13,13 @@ entity IMem is
 		RD: out STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0)
 	);
 end IMem;
--- THE BUG IS IN SLL.
 architecture Behavioral of IMem is 
 	TYPE   RamType is array(0 TO Capacity - 1) of STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0);
 	CONSTANT IRAM: RamType := (	     
-            X"22100008",
-            X"00e22025",
-            X"001080c0",
-            X"2A110009",
+            X"201000c0",
+            X"afb00000",
+            X"87B10000",
+            X"2A110041",
             X"00a42820",
             X"10a7000a",
             X"0064202a",
