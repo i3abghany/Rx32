@@ -1,13 +1,9 @@
-# 32-bit-MIPS-processor-VHDL-implementation
-Single cycle architecture MIPS processor implementation in VHDL(WIP). 
+# Mips32
+Implementation of Single-Cycle, Multi-Cycle, and a Pipelined microarchitecture which support a subset of the MIPS ISA.
+For the Pipelined processor, build hardware dependencies resolution and also built an assembler that supports software-based interlocking.
 
-# Synthesised schematic:
-Available in Schematic.pdf
+The tradeoff made is that the resolution of dependencies could be simply run on the software, making the hardware design simpler and potentially increasing frequency, but also takes away forwarding between the different pipeline stages, therefore increases average cycles per instruction (CPI).
 
-# Supported instructions:
-add, sub, and, or, nor, stl, addi, andi, ori, lw, sw, j, jr, jal, sll, srl, lui, lh
-
-# TODO: 
-* Factor out the IMem entity to fetch the instruction from a separate file.
-* Edit memory entites to support bytes.
-* test performance.
+## TODO: 
+- Support Exceptions
+- Implement Fine-Grained Multithreading(FGMT) support.
