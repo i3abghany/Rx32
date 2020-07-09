@@ -5,11 +5,11 @@ entity Mips is
     port(
         clk, reset: in STD_LOGIC;
         PCF:        out STD_LOGIC_VECTOR(31 DOWNTO 0);
-        instrF:     out STD_LOGIC_VECTOR(31 DOWNTO 0);
+        instrF:     in STD_LOGIC_VECTOR(31 DOWNTO 0);
         MemWriteM:  out STD_LOGIC;
         ALUOutM:    out STD_LOGIC_VECTOR(31 DOWNTO 0);
         WriteDataM: out STD_LOGIC_VECTOR(31 DOWNTO 0);
-        ReadDataM:  out STD_LOGIC_VECTOR(31 DOWNTO 0)
+        ReadDataM:  in STD_LOGIC_VECTOR(31 DOWNTO 0)
     );
 end Mips;
     
