@@ -12,5 +12,5 @@ end Mux2;
 
 architecture Behavioral of Mux2 is
 begin
-    y <= d1 when s = '0' else d0;
+    y <= d1 when s else d0;
 end Behavioral;

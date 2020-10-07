@@ -132,6 +132,7 @@ architecture Structural of Datapath is
     SIGNAL CStallF:        STD_LOGIC := '0';
     SIGNAL CStallD:        STD_LOGIC := '0';
     SIGNAL FlushD:         STD_LOGIC := '0';
+    SIGNAL RFClk:          STD_LOGIC := '0';
     SIGNAL ForwardAE:      STD_LOGIC_VECTOR (1 DOWNTO 0) := (others => '0');
     SIGNAL ForwardBE:      STD_LOGIC_VECTOR (1 DOWNTO 0) := (others => '0');
     SIGNAL RSD, RTD, RDD:  STD_LOGIC_VECTOR (4 DOWNTO 0) := (others => '0');
@@ -162,6 +163,8 @@ architecture Structural of Datapath is
     SIGNAL ImmD:           STD_LOGIC_VECTOR(15 DOWNTO 0) := (others => '0');
     SIGNAL shamtD:         STD_LOGIC_VECTOR (4 DOWNTO 0) := (others => '0');
     SIGNAL shamtE:         STD_LOGIC_VECTOR (4 DOWNTO 0) := (others => '0');
+    SIGNAL sel:            STD_LOGIC_VECTOR (1 downto 0) := (others => '0');
+    
 begin
 
     -----------------------------------------------------
@@ -169,22 +172,23 @@ begin
     -----------------------------------------------------
     OPD    <= instrD(31 DOWNTO 26);
     functD <= instrD(5 DOWNTO 0);
+    
     RSD    <= instrD(25 DOWNTO 21);
     RTD    <= instrD(20 DOWNTO 16);
     RDD    <= instrD(15 DOWNTO 11);
     ImmD   <= instrD(15 DOWNTO 0);
-    shamtD  <= instrD(4 DOWNTO 0); 
+    shamtD <= instrD(10 DOWNTO 6); 
     -----------------------------------------------------
     -- Next PC logic.
     -----------------------------------------------------
     PCJump <= PCPlus4D(31 DOWNTO 28) & instrD(25 DOWNTO 0) & "00";
-    PCBranchMux: Mux2 generic map(32) port map(d0 => PCPlus4F, d1 => PCBranchD, s => PCSrcD, y => PCNextBRFD);
-    PCJumpMux:   Mux2 generic map(32) port map(d0 => PCNextBRFD, d1 => PCJump, s => jumpD, y => PCNextFD);
-    
+    sel <= jumpD & PCSrcD;
+    PCMuxOverall: Mux3 generic map(32) port map(d0 => PCPlus4F, d1 => PCBranchD, d2 => PCJump, s => sel, y => PCNextFD);
     -----------------------------------------------------
     -- Register file.
     -----------------------------------------------------
-    RF: RegFile port map(clk => clk, WE3 => RegWriteW, 
+    RFClk <= NOT clk;
+    RF: RegFile port map(clk => RFClk, WE3 => RegWriteW, 
                          A1 => RSD, A2 => RTD, 
                          WA3 => WriteRegW, WD3 => ResultW, 
                          RD1 => SrcAD, RD2 => SrcBD);
@@ -252,7 +256,7 @@ begin
     ForwardAEMux: Mux3 generic map(32) port map(d0 => SrcAE, d1 => ResultW, d2 => ALUOutM, s => ForwardAE, y => SrcAEz);
     ForwardBEMux: Mux3 generic map(32) port map(d0 => SrcBE, d1 => ResultW, d2 => ALUOutM, s => ForwardBE, y => SrcBEz1);
     
-    ALUSrcBEMux:  Mux2 generic map(32) port map(d0 =>SrcBEz1, d1 => SignImmE, s => ALUSrcE, y => SrcBEz2);
+    ALUSrcBEMux:  Mux2 generic map(32) port map(d0 => SrcBEz1, d1 => SignImmE, s => ALUSrcE, y => SrcBEz2);
     
     MainALU: ALU port map(A => SrcAEz, B => SrcBEz2, ALUControl => ALUControlE, result => ALUOutE, shamt => shamtE);
     
@@ -283,7 +287,7 @@ begin
     PRegW3: RegRCEn generic map(5) port map(clk => clk, reset => reset, clear => '0', d => WriteRegM, q => WriteRegW, en => '1');
     
     -- Result Selection mux.
-    ResultMux: Mux2 generic map(32) port map(d0 => ReadDataW, d1 => ALUOutW, s => MemToRegW, y => ResultW);
+    ResultMux: Mux2 generic map(32) port map(d0 => ALUOutW, d1 => ReadDataW, s => MemToRegW, y => ResultW);
     
     
     -----------------------------------------------------

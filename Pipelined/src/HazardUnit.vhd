@@ -64,3 +64,4 @@ begin
     StallF <= StallD after 1 ns;
     FlushE <= StallD or jumpD after 1 ns;
 end Behavioral;
+

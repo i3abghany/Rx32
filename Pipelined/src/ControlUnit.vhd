@@ -67,6 +67,7 @@ architecture Behavioral of ControlUnit is
     SIGNAL MemWriteE: STD_LOGIC;
 begin
     
+    PCSrcD <= branchD AND equalD;
     MD: MainDecoder port map(
         OPCode   => opD,   
         MemToReg => MemToRegD,
@@ -112,3 +113,4 @@ begin
     
 
 end Behavioral;
+

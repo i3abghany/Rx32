@@ -19,7 +19,7 @@ architecture Behavioral of DMem is
 	TYPE   RamType is array(0 TO Capacity - 1) of STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0);
 	SIGNAL RAM: RamType := (others => (others => '0'));
 begin
-	process(clk) begin
+	process(clk, A) begin
 		if (rising_edge(clk)) then 
 			if(WE = '1') then 
 			     RAM(CONV_INTEGER(A) / 4) <= WD;
