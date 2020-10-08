@@ -22,9 +22,9 @@ begin
 	process(clk, A) begin
 		if (rising_edge(clk)) then 
 			if(WE = '1') then 
-			     RAM(CONV_INTEGER(A) / 4) <= WD;
+			     RAM(TO_INTEGER(UNSIGNED(A(7 DOWNTO 0))) / 4) <= WD;
             end if;
 		end if;
-		RD <= (RAM(CONV_INTEGER(A) / 4));
+		RD <= RAM(TO_INTEGER(UNSIGNED(A(7 DOWNTO 0))) / 4);
 	end process;
 end Behavioral;

@@ -28,7 +28,8 @@ architecture Behavioral of HazardUnit is
     SIGNAL LWStallD:     STD_LOGIC;
     SIGNAL BranchStallD: STD_LOGIC;
 begin
-    -- Decode stage forwarding signals.
+
+    --  Decode stage forwarding signals.
     ForwardAD <= '1' when ((RSD /= "00000") AND (RSD = WriteRegM) AND (RegWriteM = '1'))
             else '0';
     ForwardBD <= '1' when ((RTD /= "00000") AND (RTD = WriteRegM) AND (RegWriteM = '1'))
@@ -38,17 +39,17 @@ begin
     process(all) begin
         ForwardAE <= "00"; ForwardBE <= "00";
         if (RSE /= "00000") then
-            if ((RSE = WriteRegM) and (RegWriteM = '1')) then
+            if ((RSE = WriteRegM) AND (RegWriteM = '1')) then
                 ForwardAE <= "10";
-            elsif ((RSE = WriteRegW) and (RegWriteW = '1')) then
+            elsif ((RSE = WriteRegW) AND (RegWriteW = '1')) then
                 ForwardAE <= "01";
             end if;
         end if;
         
         if (RTE /= "00000") then
-            if ((RTE = writeregM) and (RegWriteM = '1')) then
+            if ((RTE = writeregM) AND (RegWriteM = '1')) then
                 ForwardBE <= "10";
-            elsif ((RTE = WriteRegW) and (RegWriteW = '1')) then
+            elsif ((RTE = WriteRegW) AND (RegWriteW = '1')) then
                 ForwardBE <= "01";
             end if;
         end if;
@@ -57,11 +58,17 @@ begin
     -- Stall signals.
     LWStallD <= '1' when ((MemToRegE = '1') AND ((RTE = RSD) OR (RTD = RTE)))
                 else '0';
-                
-    BranchStallD <= '1' when ((branchD = '1') AND (((RegWriteE = '1') AND ((WriteRegE = rsD) OR (writeregE = rtD))) OR ((MemToRegM = '1') AND ((WriteRegM = rsD) OR (WriteRegM = rtD)))))
+                                
+    BranchStallD <= '1' when ((branchD = '1') AND 
+                             (((RegWriteE = '1') AND 
+                             ((WriteRegE = rsD) OR 
+                             (WriteRegE = rtD))) OR 
+                             ((MemToRegM = '1') AND 
+                             ((WriteRegM = rsD) OR 
+                             (WriteRegM = rtD)))))
                     else '0';
-    StallD <= (LWStallD OR BranchStallD) after 1 ns;
-    StallF <= StallD after 1 ns;
-    FlushE <= StallD or jumpD after 1 ns;
+                    
+    StallD <= LWStallD OR BranchStallD;
+    StallF <= StallD;
+    FlushE <= StallD;
 end Behavioral;
-

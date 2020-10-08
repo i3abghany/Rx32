@@ -163,7 +163,7 @@ architecture Structural of Datapath is
     SIGNAL ImmD:           STD_LOGIC_VECTOR(15 DOWNTO 0) := (others => '0');
     SIGNAL shamtD:         STD_LOGIC_VECTOR (4 DOWNTO 0) := (others => '0');
     SIGNAL shamtE:         STD_LOGIC_VECTOR (4 DOWNTO 0) := (others => '0');
-    SIGNAL sel:            STD_LOGIC_VECTOR (1 downto 0) := (others => '0');
+    SIGNAL PCSel:          STD_LOGIC_VECTOR (1 downto 0) := (others => '0');
     
 begin
 
@@ -181,12 +181,15 @@ begin
     -----------------------------------------------------
     -- Next PC logic.
     -----------------------------------------------------
+    
     PCJump <= PCPlus4D(31 DOWNTO 28) & instrD(25 DOWNTO 0) & "00";
-    sel <= jumpD & PCSrcD;
-    PCMuxOverall: Mux3 generic map(32) port map(d0 => PCPlus4F, d1 => PCBranchD, d2 => PCJump, s => sel, y => PCNextFD);
+    PCSel <= jumpD & PCSrcD;
+    PCMuxOverall: Mux3 generic map(32) port map(d0 => PCPlus4F, d1 => PCBranchD, d2 => PCJump, s => PCSel, y => PCNextFD);
+   
     -----------------------------------------------------
     -- Register file.
     -----------------------------------------------------
+    
     RFClk <= NOT clk;
     RF: RegFile port map(clk => RFClk, WE3 => RegWriteW, 
                          A1 => RSD, A2 => RTD, 
@@ -209,20 +212,34 @@ begin
     -----------------------------------------------------
     -- Decode stage (second stage out of five.)
     -----------------------------------------------------
-    
+    FlushD <= (PCSrcD OR jumpD); 
     -- PC pipeline register.
-    PRegD1: RegRCEn generic map(32) port map(clk => clk, reset => reset, en => CStallD, d => PCPlus4F, q => PCPlus4D, clear => '0');
+    PRegD1: RegRCEn generic map(32) 
+            port map(clk => clk, reset => reset, 
+                     en => CStallD, d => PCPlus4F, 
+                     q => PCPlus4D, clear => '0');
     
     -- instruction pipeline address.
-    PRegD2: RegRCEn generic map(32) port map(clk => clk, reset => reset, en => CStallD, d => instrF, q => instrD, clear => flushD);
+    PRegD2: RegRCEn generic map(32) 
+            port map(clk => clk, reset => reset, 
+            en => CStallD, d => instrF, 
+            q => instrD, clear => FlushD);
     
     -- Branching address calculation.
-    ImmSignExtend: SignExtend port map(A => ImmD, Y => SignImmD);
-    Shift2: SL2 port map(A => SignImmD, Y => SignImmShD);
-    BranchAdder: Adder port map(A => SignImmShD, B => PCPlus4D, Y => PCBranchD);
+    ImmSignExtend: SignExtend
+                   port map(A => ImmD, Y => SignImmD);
+    Shift2: SL2
+            port map(A => SignImmD, Y => SignImmShD);
+    BranchAdder: Adder 
+                 port map(A => SignImmShD, B => PCPlus4D, Y => PCBranchD);
     
-    ForwardMuxAD: Mux2 generic map(32) port map(d0 => SrcAD, d1 => ALUOutM, s => ForwardAD, y => SrcADz);
-    ForwardMuxBD: Mux2 generic map(32) port map(d0 => SrcBD, d1 => ALUOutM, s => ForwardBD, y => SrcBDz);
+    ForwardMuxAD: Mux2 generic map(32) 
+                  port map(d0 => SrcAD, d1 => ALUOutM,
+                  s => ForwardAD, y => SrcADz);
+                  
+    ForwardMuxBD: Mux2 generic map(32) 
+                  port map(d0 => SrcBD, d1 => ALUOutM, 
+                  s => ForwardBD, y => SrcBDz);
     
     BranchComp: EqualityComp port map(A => SrcADz, B => SrcBDz, y => equalD);
     
@@ -231,64 +248,118 @@ begin
     -----------------------------------------------------
     
     -- RS pipeline register.
-    PRegE1: RegRCEn generic map(5) port map(clk => clk, reset => reset, clear => FlushE, d => RSD, q => RSE, en => '1');
+    PRegE1: RegRCEn generic map(5) 
+            port map(clk => clk, reset => reset, 
+                     clear => FlushE, d => RSD, 
+                     q => RSE, en => '1');
     
     -- RT pipeline register
-    PRegE2: RegRCEn generic map(5) port map(clk => clk, reset => reset, clear => FlushE, d => RTD, q => RTE, en => '1');
+    PRegE2: RegRCEn generic map(5) 
+            port map(clk => clk, reset => reset, 
+                     clear => FlushE, d => RTD,
+                     q => RTE, en => '1');
     
     -- RE pipeline register
-    PRegE3: RegRCEn generic map(5) port map(clk => clk, reset => reset, clear => FlushE, d => RDD, q => RDE, en => '1');
+    PRegE3: RegRCEn generic map(5) 
+            port map(clk => clk, reset => reset, 
+                     clear => FlushE, d => RDD, 
+                     q => RDE, en => '1');
     
     -- Sign immediate pipeline register.
-    PRegE4: RegRCEn generic map(32) port map(clk => clk, reset => reset, clear => FlushE, d => SignImmD, q => SignImmE, en => '1');
+    PRegE4: RegRCEn generic map(32) 
+            port map(clk => clk, reset => reset, 
+                     clear => FlushE, d => SignImmD, 
+                     q => SignImmE, en => '1');
     
     -- SraA & SrcB pipeline register.
-    PRegE5: RegRCEn generic map(32) port map(clk => clk, reset => reset, clear => FlushE, d => SrcAD, q => SrcAE, en => '1');
-    PRegE6: RegRCEn generic map(32) port map(clk => clk, reset => reset, clear => FlushE, d => SrcBD, q => SrcBE, en => '1');
+    PRegE5: RegRCEn generic map(32) 
+            port map(clk => clk, reset => reset, 
+                     clear => FlushE, d => SrcAD, 
+                     q => SrcAE, en => '1');
+                     
+    PRegE6: RegRCEn generic map(32) 
+            port map(clk => clk, reset => reset, 
+                     clear => FlushE, d => SrcBD, 
+                     q => SrcBE, en => '1');
     
     -- Shamt pipeline register.
-    PRegE7: RegRCEn generic map(5) port map(clk => clk, reset => reset, clear => FlushE, d => shamtD, q => shamtE, en => '1');
+    PRegE7: RegRCEn generic map(5) 
+            port map(clk => clk, reset => reset, 
+                     clear => FlushE, d => shamtD, 
+                     q => shamtE, en => '1');
     
     -- WriteRegE Selection mux.
-    WRMuxE: Mux2 generic map(5) port map(d0 => RTE, d1 => RDE, s => RegDistE, y => WriteRegE);
+    WRMuxE: Mux2 generic map(5) 
+            port map(d0 => RTE, d1 => RDE, s => RegDistE, y => WriteRegE);
     
     -- Src A and Src B selection muxes.
-    ForwardAEMux: Mux3 generic map(32) port map(d0 => SrcAE, d1 => ResultW, d2 => ALUOutM, s => ForwardAE, y => SrcAEz);
-    ForwardBEMux: Mux3 generic map(32) port map(d0 => SrcBE, d1 => ResultW, d2 => ALUOutM, s => ForwardBE, y => SrcBEz1);
+    ForwardAEMux: Mux3 generic map(32) 
+                  port map(d0 => SrcAE, d1 => ResultW, 
+                           d2 => ALUOutM, s => ForwardAE,
+                           y => SrcAEz);
     
-    ALUSrcBEMux:  Mux2 generic map(32) port map(d0 => SrcBEz1, d1 => SignImmE, s => ALUSrcE, y => SrcBEz2);
+    ForwardBEMux: Mux3 generic map(32) 
+                  port map(d0 => SrcBE, d1 => ResultW,
+                           d2 => ALUOutM, s => ForwardBE,
+                           y => SrcBEz1);
     
-    MainALU: ALU port map(A => SrcAEz, B => SrcBEz2, ALUControl => ALUControlE, result => ALUOutE, shamt => shamtE);
+    ALUSrcBEMux:  Mux2 generic map(32) 
+                  port map(d0 => SrcBEz1, d1 => SignImmE, 
+                  s => ALUSrcE, y => SrcBEz2);
+    
+    MainALU: ALU 
+             port map(A => SrcAEz, B => SrcBEz2, 
+                      ALUControl => ALUControlE, 
+                      result => ALUOutE, shamt => shamtE);
     
     -----------------------------------------------------
     -- Memory stage (fourth stage out of five.)
     -----------------------------------------------------
     
     -- WriteRegE pipeline register.
-    PRegM1: RegRCEn generic map(5) port map(clk => clk, reset => reset, clear => '0', d => WriteRegE, q => WriteRegM, en => '1');
+    PRegM1: RegRCEn generic map(5) 
+            port map(clk => clk, reset => reset, 
+                     clear => '0', d => WriteRegE, 
+                     q => WriteRegM, en => '1');
     
     -- ALUOut pipeline register
-    PRegM2: RegRCEn generic map(32) port map(clk => clk, reset => reset, clear => '0', d => ALUOutE, q => ALUOutM, en => '1');
+    PRegM2: RegRCEn generic map(32) 
+            port map(clk => clk, reset => reset, 
+                     clear => '0', d => ALUOutE, 
+                     q => ALUOutM, en => '1');
     
     -- WriteData pipeline register 
-    PRegM3: RegRCEn generic map(32) port map(clk => clk, reset => reset, clear => '0', d => SrcBEz1, q => WriteDataM, en => '1');
+    PRegM3: RegRCEn generic map(32) 
+            port map(clk => clk, reset => reset, 
+                     clear => '0', d => SrcBEz1, 
+                     q => WriteDataM, en => '1');
 
     -----------------------------------------------------
     -- Register Writeback stage (fifth stage out of five.)
     -----------------------------------------------------
     
     -- ReadDataM pipeline register.
-    PRegW1: RegRCEn generic map(32) port map(clk => clk, reset => reset, clear => '0', d => ReadDataM, q => ReadDataW, en => '1');
+    PRegW1: RegRCEn generic map(32) 
+            port map(clk => clk, reset => reset,
+            clear => '0', d => ReadDataM, 
+            q => ReadDataW, en => '1');
     
     -- ALUOutM pipeline register
-    PRegW2: RegRCEn generic map(32) port map(clk => clk, reset => reset, clear => '0', d => ALUOutM, q => ALUOutW, en => '1');
+    PRegW2: RegRCEn generic map(32) 
+            port map(clk => clk, reset => reset, 
+            clear => '0', d => ALUOutM, 
+            q => ALUOutW, en => '1');
     
     -- WriteRegM pipeline register
-    PRegW3: RegRCEn generic map(5) port map(clk => clk, reset => reset, clear => '0', d => WriteRegM, q => WriteRegW, en => '1');
+    PRegW3: RegRCEn generic map(5) 
+            port map(clk => clk, reset => reset,
+                     clear => '0', d => WriteRegM, 
+                     q => WriteRegW, en => '1');
     
     -- Result Selection mux.
-    ResultMux: Mux2 generic map(32) port map(d0 => ALUOutW, d1 => ReadDataW, s => MemToRegW, y => ResultW);
-    
+    ResultMux: Mux2 generic map(32) 
+               port map(d0 => ALUOutW, d1 => ReadDataW,
+                        s => MemToRegW, y => ResultW);
     
     -----------------------------------------------------
     -- Hazard Unit.
