@@ -19,13 +19,17 @@ void free_mem(void **p, size_t num) {
 
 size_t get_size(char **content) {
     int r = 0;
-    for(int i = 0; strcmp(content[i], "ENDOFPROGRAM") != 0; i++, r++);
+    for(int i = 0; strcmp(content[i], "ENDOFPROGRAM") != 0; i++)
+        r++;
+
     return r;
 }
 
 size_t get_memory_size(const uint32_t *mem) {
     int r = 0;
-    for(int i = 0; mem[i] != 0xFFFFFFFF; i++, r++);
+    for(int i = 0; mem[i] != 0xFFFFFFFF; i++)
+        r++;
+
     return r;
 }
 
