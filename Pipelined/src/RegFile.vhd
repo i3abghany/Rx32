@@ -11,11 +11,13 @@ entity RegFile is
 		WD3:         in STD_LOGIC_VECTOR(31 DOWNTO 0);
 		RD1, RD2:    out STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
+	attribute dont_touch : string;
+    attribute dont_touch of RegFile: entity is "true|yes";
 end RegFile;
 
 architecture Behavioral of RegFile is 
 	TYPE   RamType is array (31 DOWNTO 0) of STD_LOGIC_VECTOR(31 DOWNTO 0);
-	SIGNAL mem: RamType := (29 => X"000007D0", 28 => X"00000640", others => (others => '0'));
+	SIGNAL mem: RamType := (29 => X"00000000", 28 => X"00000000", others => (others => '0'));
 begin 
 	process(clk) begin
 		if(rising_edge(clk)) then

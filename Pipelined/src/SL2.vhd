@@ -6,6 +6,8 @@ entity SL2 is
 		a:  in STD_LOGIC_VECTOR(31 DOWNTO 0);
 		y: out STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
+	attribute dont_touch : string;
+    attribute dont_touch of SL2: entity is "true|yes";
 end SL2;
 
 architecture Behavioral of SL2 is 

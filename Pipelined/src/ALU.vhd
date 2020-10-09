@@ -28,10 +28,10 @@ begin
                 if (a < b) then result <= X"00000001"; else result <= X"00000000"; end if;
             when "0101" => result <= a NOR b;
             when "0100" => result <= STD_LOGIC_VECTOR(SHIFT_LEFT (UNSIGNED(b), CONV_INTEGER(shamt)));          -- SLL
-            when "1100" => result <= STD_LOGIC_VECTOR(SHIFT_RIGHT(UNSIGNED(b), CONV_INTEGER(shamt)));         -- SRL
+            when "1100" => result <= STD_LOGIC_VECTOR(SHIFT_RIGHT(UNSIGNED(b), CONV_INTEGER(shamt)));          -- SRL
             when "1000" => result <= STD_LOGIC_VECTOR(SHIFT_LEFT (UNSIGNED(b), CONV_INTEGER(a(4 DOWNTO 0))));  -- SLLV
-            when "1001" => result <= STD_LOGIC_VECTOR(SHIFT_RIGHT(UNSIGNED(b), CONV_INTEGER(a(4 DOWNTO 0)))); -- SRLV
-            when "1010" => result <= STD_LOGIC_VECTOR(SHIFT_RIGHT  (SIGNED(b), CONV_INTEGER(a(4 DOWNTO 0))));   -- SRAV
+            when "1001" => result <= STD_LOGIC_VECTOR(SHIFT_RIGHT(UNSIGNED(b), CONV_INTEGER(a(4 DOWNTO 0))));  -- SRLV
+            when "1010" => result <= STD_LOGIC_VECTOR(SHIFT_RIGHT  (SIGNED(b), CONV_INTEGER(a(4 DOWNTO 0))));  -- SRAV
             when others => 
                 result <= X"--------";
         end case;

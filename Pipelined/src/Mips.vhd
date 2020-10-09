@@ -11,6 +11,8 @@ entity Mips is
         WriteDataM: out STD_LOGIC_VECTOR(31 DOWNTO 0);
         ReadDataM:  in STD_LOGIC_VECTOR(31 DOWNTO 0)
     );
+	attribute dont_touch : string;
+    attribute dont_touch of Mips: entity is "true|yes";
 end Mips;
     
 architecture Behavioral of Mips is

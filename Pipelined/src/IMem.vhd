@@ -12,6 +12,8 @@ entity IMem is
 		A:   in STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0);
 		RD: out STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0)
 	);
+	attribute dont_touch : string;
+    attribute dont_touch of IMem: entity is "true|yes";
 end IMem;
 architecture Behavioral of IMem is 
 	TYPE   RamType is array(0 TO Capacity - 1) of STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0);

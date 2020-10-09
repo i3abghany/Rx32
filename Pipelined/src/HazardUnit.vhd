@@ -22,6 +22,8 @@ entity HazardUnit is
         StallD:             out STD_LOGIC;
         FlushE:             out STD_LOGIC
     );
+    attribute dont_touch : string;
+    attribute dont_touch of HazardUnit: entity is "true|yes";
 end HazardUnit;
 
 architecture Behavioral of HazardUnit is

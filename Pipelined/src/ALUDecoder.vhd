@@ -36,7 +36,7 @@ begin
                     when "000100" => ALUControl <= "1000"; -- SLLV.
                     when "000110" => ALUControl <= "1001"; -- SRLV.
                     when "000111" => ALUControl <= "1010"; -- SRAV.
-                    when others   => ALUControl <= "----"; -- illegal.
+                    when others   => ALUControl <= "0000"; -- illegal.
                 end case;
         end case;
     end process;

@@ -299,9 +299,9 @@ begin
                            y => SrcAEz);
     
     ForwardBEMux: Mux3 generic map(32) 
-                  port map(d0 => SrcBE, d1 => ResultW,
-                           d2 => ALUOutM, s => ForwardBE,
-                           y => SrcBEz1);
+    port map(d0 => SrcBE, d1 => ResultW,
+    d2 => ALUOutM, s => ForwardBE,
+    y => SrcBEz1);
     
     ALUSrcBEMux:  Mux2 generic map(32) 
                   port map(d0 => SrcBEz1, d1 => SignImmE, 

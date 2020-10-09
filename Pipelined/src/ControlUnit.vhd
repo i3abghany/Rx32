@@ -19,6 +19,8 @@ entity ControlUnit is
         jumpD:          out STD_LOGIC;
         ALUControlE:    out STD_LOGIC_VECTOR(3 DOWNTO 0)
     );
+    attribute dont_touch : string;
+    attribute dont_touch of ControlUnit: entity is "true|yes";
 end ControlUnit;
 
 architecture Behavioral of ControlUnit is
@@ -68,6 +70,7 @@ architecture Behavioral of ControlUnit is
 begin
     
     PCSrcD <= branchD AND equalD;
+    
     MD: MainDecoder port map(
         OPCode   => opD,   
         MemToReg => MemToRegD,
