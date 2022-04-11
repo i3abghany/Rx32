@@ -1,6 +1,0 @@
-addi $s0, $zero, 12
-addi $s1, $zero, 7
-and  $s2, $s1, $s0
-j around
-add $s0, $s1, $s2
-around: andi $t0, $s0, $s1
