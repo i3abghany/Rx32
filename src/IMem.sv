@@ -13,7 +13,7 @@ module IMem(
         output logic[31:0] RD
     );
     logic[31:0] RAM[511:0];
-    initial $readmemh("C:/Users/Mahmo/32-bit-Fine-Grained-Multithreaded-Mips-Processor/32-bit-Fine-Grained-Multithreaded-Mips-Processor.srcs/sources_1/new/InstructionMemory.mem", RAM); 
+    initial $readmemh("InstructionMemory.mem", RAM);
     
     assign RD = RAM[A]; 
 endmodule
