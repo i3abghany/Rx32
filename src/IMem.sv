@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// capable of storing 256 instructions.
+// capable of storing 512 instructions.
 // Each thread will have 100 slots.
 // Thread 0: 0   ->  99
 // Thread 1: 100 -> 199
