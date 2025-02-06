@@ -25,10 +25,10 @@ module ALUDecoder(
                     6'b100101: ALUControl <= 4'b0001; // Or
                     6'b101010: ALUControl <= 4'b0111; // SLT
                     6'b100111: ALUControl <= 4'b0101; // NOR
-                    6'b000000: ALUControl <= 4'b0100; // SLL
-                    6'b000100: ALUControl <= 4'b1000; // SLLV
-                    6'b000110: ALUControl <= 4'b1001; // SRLV
-                    6'b000111: ALUControl <= 4'b1010; // SRAV
+                    6'b000000: ALUControl <= 4'b0100; // SLLI
+                    6'b000100: ALUControl <= 4'b1000; // SLL
+                    6'b000110: ALUControl <= 4'b1001; // SRL
+                    6'b000111: ALUControl <= 4'b1010; // SRA
                     default:   ALUControl <= 4'bxxxx;
                 endcase
         endcase
