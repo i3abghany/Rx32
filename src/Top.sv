@@ -9,7 +9,7 @@ module Top(
     logic[31:0] WriteData;
     logic MemWrite;
     
-    Mips Processor(
+    Rx32 Processor(
         .clk(clk), .reset(reset),
         .PCF(InstructionAddr),
         .instrF(Instruction),

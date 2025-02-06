@@ -8,21 +8,13 @@ module PCRepository (input logic clk, reset,
                     output logic[31:0] q_g         
                 );
     
-    logic[31:0] PC0_q;
-    PC0Reg PC0(.clk(clk), .reset(reset), .en(en && (sel_write == 0)), .clear(clear), .d(d_g), .q(PC0_q));
+    logic [31:0] PC_q [4:0];
 
-    logic[31:0] PC1_q;
-    PC1Reg PC1(.clk(clk), .reset(reset), .en(en && (sel_write == 1)), .clear(clear), .d(d_g), .q(PC1_q));
-
-    logic[31:0] PC2_q;
-    PC2Reg PC2(.clk(clk), .reset(reset), .en(en && (sel_write == 2)), .clear(clear), .d(d_g), .q(PC2_q));
-
-    logic[31:0] PC3_q;
-    PC3Reg PC3(.clk(clk), .reset(reset), .en(en && (sel_write == 3)), .clear(clear), .d(d_g), .q(PC3_q));
-
-
-    logic[31:0] PC4_q;
-    PC4Reg PC4(.clk(clk), .reset(reset), .en(en && (sel_write == 4)), .clear(clear), .d(d_g), .q(PC4_q));
+    PCReg #(.WIDTH(32), .RESET_VAL(0)) PC0(.clk(clk), .reset(reset), .en(en && (sel_write == 0)), .clear(clear), .d(d_g), .q(PC_q[0]));
+    PCReg #(.WIDTH(32), .RESET_VAL(400)) PC1(.clk(clk), .reset(reset), .en(en && (sel_write == 1)), .clear(clear), .d(d_g), .q(PC_q[1]));
+    PCReg #(.WIDTH(32), .RESET_VAL(800)) PC2(.clk(clk), .reset(reset), .en(en && (sel_write == 2)), .clear(clear), .d(d_g), .q(PC_q[2]));
+    PCReg #(.WIDTH(32), .RESET_VAL(1200)) PC3(.clk(clk), .reset(reset), .en(en && (sel_write == 3)), .clear(clear), .d(d_g), .q(PC_q[3]));
+    PCReg #(.WIDTH(32), .RESET_VAL(1600)) PC4(.clk(clk), .reset(reset), .en(en && (sel_write == 4)), .clear(clear), .d(d_g), .q(PC_q[4]));
     
     Mux5 PCSelectionMux(.d0(PC0_q), .d1(PC1_q), .d2(PC2_q), .d3(PC3_q), .d4(PC4_q), .sel(sel_read), .Y(q_g));
 endmodule

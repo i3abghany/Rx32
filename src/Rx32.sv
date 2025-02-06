@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module Mips(
+module Rx32(
         input logic clk,   reset,
         input  logic[31:0] ReadDataM,
         input  logic[31:0] instrF,
