@@ -77,14 +77,15 @@ module Datapath(
     ThreadSelector TS(.reset(reset), .clk(clk), .sel(selF)); 
     
     assign PCJumpM = { PCPlus4M[31:28], instrM[25:0], 2'b00 };
-    Mux3 PCMux(.d0(PCPlus4M), .d1(PCBranchM), .d2(PCJumpM), .sel({jumpM, PCSrcM}), .Y(PCNextFD));
-    PCRepository PCRepo( .reset(reset), .clk(clk),                          
-                         .en(PCPlus4M != 0), .clear(1'b0), 
-                         .sel_read(selF), 
-                         .sel_write(selM), 
-                         .d_g(PCNextFD), 
+    Mux #(32, 3) PCMux(.data_in({PCPlus4M, PCBranchM, PCJumpM}), .sel({jumpM, PCSrcM}), .Y(PCNextFD));
+
+    PCRepository PCRepo( .reset(reset), .clk(clk),
+                         .en(PCPlus4M != 0), .clear(1'b0),
+                         .sel_read(selF),
+                         .sel_write(selM),
+                         .d_g(PCNextFD),
                          .q_g(PCF));
-    
+
     Adder PCAdder(.A(PCF), .B(32'h00000004), .Y(PCPlus4F));
     
     /*******************************************************************/
@@ -125,7 +126,7 @@ module Datapath(
     RegRCEn #(32) PRegE4(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(SrcAD), .q(SrcAE));
     RegRCEn #(32) PRegE5(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(SrcBD), .q(RegSrcBE));
     
-    Mux2 #(32) SrcBMux(.d0(RegSrcBE), .d1(SignImmE), .s(ALUSrcE), .Y(SrcBE));
+    Mux #(32, 2) SrcBMux(.data_in({RegSrcBE, SignImmD}), .sel(ALUSrcE), .Y(SrcBE));
     
     RegRCEn #(32) PRegE6(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(SignImmD), .q(SignImmE));
     
@@ -135,7 +136,7 @@ module Datapath(
     
     RegRCEn #(3) PRegE9(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(selD), .q(selE));
     
-    Mux2 #(5) DstMux(.d0(RTE), .d1(RDE), .s(RegDistE), .Y(WriteRegE));
+    Mux #(5, 2) DstMux(.data_in({RTE, RDE}), .sel(RegDistE), .Y(WriteRegE));
     
     SL2 ADDRShifter(.A(SignImmE), .Y(ShiftedSignImmE));
     Adder BranchAddrAdder(.A(PCPlus4E), .B(ShiftedSignImmE), .Y(PCBranchE));
@@ -170,7 +171,7 @@ module Datapath(
     RegRCEn #(32) PRegW2(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(ALUOutM), .q(ALUOutW));
     RegRCEn #(3)  PRegW3(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(selM), .q(selW));
     RegRCEn #(5)  PRegW4(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(WriteRegM), .q(WriteRegW));
-        
-    Mux2 #(32) ResMux(.d0(ALUOutW), .d1(ReadDataW), .s(MemToRegW), .Y(ResultW));
+
+    Mux #(32, 2) ResMux(.data_in({ALUOutW, ReadDataW}), .sel(MemToRegW), .Y(ResultW));
     
 endmodule

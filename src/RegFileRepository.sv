@@ -9,7 +9,7 @@ module RegFileRepository(
     input logic[31:0] WD3_g,
     output logic[31:0] RD1_g, RD2_g
 );
-    
+
     logic[31:0] OP1_0;
     logic[31:0] OP2_0;
     RegFile RF0(.clk(clk), .WE3(WE3_g && sel_write == 0), .RA1(RA1_g), .RA2(RA2_g), .WA3(WA3_g), .WD3(WD3_g), .RD1(OP1_0), .RD2(OP2_0));
@@ -31,8 +31,16 @@ module RegFileRepository(
     RegFile RF4(.clk(clk), .WE3(WE3_g && sel_write == 4), .RA1(RA1_g), .RA2(RA2_g), .WA3(WA3_g), .WD3(WD3_g), .RD1(OP1_4), .RD2(OP2_4)); 
     
     // RD1 selection MUZ:
-    Mux5 RD1_Mux(.sel(sel_read), .d0(OP1_0), .d1(OP1_1), .d2(OP1_2), .d3(OP1_3), .d4(OP1_4), .Y(RD1_g));
+    Mux #(32, 5) RD1_Mux(
+        .data_in({OP1_0, OP1_1, OP1_2, OP1_3, OP1_4}),
+        .sel(sel_read),
+        .Y(RD1_g)
+    );
     
     // RD2 selection MUX:
-    Mux5 RD2_Mux(.sel(sel_read), .d0(OP2_0), .d1(OP2_1), .d2(OP2_2), .d3(OP2_3), .d4(OP2_4), .Y(RD2_g));
+    Mux #(32, 5) RD2_Mux(
+        .data_in({OP2_0, OP2_1, OP2_2, OP2_3, OP2_4}),
+        .sel(sel_read),
+        .Y(RD2_g)
+    );
 endmodule

@@ -16,5 +16,9 @@ module PCRepository (input logic clk, reset,
     PCReg #(.WIDTH(32), .RESET_VAL(1200)) PC3(.clk(clk), .reset(reset), .en(en && (sel_write == 3)), .clear(clear), .d(d_g), .q(PC_q[3]));
     PCReg #(.WIDTH(32), .RESET_VAL(1600)) PC4(.clk(clk), .reset(reset), .en(en && (sel_write == 4)), .clear(clear), .d(d_g), .q(PC_q[4]));
     
-    Mux5 PCSelectionMux(.d0(PC_q[0]), .d1(PC_q[1]), .d2(PC_q[2]), .d3(PC_q[3]), .d4(PC_q[4]), .sel(sel_read), .Y(q_g));
+    Mux #(32, 5) PCSelectionMux(
+        .data_in(PC_q),
+        .sel(sel_read),
+        .Y(q_g)
+    );
 endmodule
