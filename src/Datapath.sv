@@ -3,7 +3,7 @@
 module Datapath(
     input logic clk, reset,
     RegWriteW,
-    jumpM, branchM,
+    jumpE, branchE, wfiE,
     input logic[1:0] ResultSrcW,
     input logic[2:0] ImmSrcD,
     input logic[1:0] ALUSrcAE,
@@ -11,32 +11,32 @@ module Datapath(
     input logic[3:0] ALUControlE, 
     input logic[31:0] instrF,
     input logic[31:0] ReadDataM,
+    input logic[4:0] irq,
+    input logic StallF, StallD, FlushD, FlushE,
+    input logic[1:0] ForwardAE, ForwardBE,
     output logic[6:0] opD,
     output logic[2:0] funct3D,
     output logic funct7b5D,
+    output logic[11:0] funct12D,
+    output logic ValidF, RedirectE,
+    output logic[2:0] selF, selD, selE, selM, selW,
+    output logic[4:0] Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW,
     output logic[31:0] PCF, 
     output logic[31:0] ALUOutM,
     output logic[31:0] WriteDataM,
     output logic[3:0] ByteEnableM
 );
-    logic[31:0] PCNextM;
+    logic[31:0] PCNextE;
     logic[31:0] instrD;
     logic[31:0] instrE;
     logic[31:0] instrM;
-    logic[4:0] Rs1D, Rs2D, RdD;
+    logic[4:0] RdD;
     logic[2:0] funct3E, funct3M;
-    logic[2:0] selF;
-    logic[2:0] selD;
-    logic[2:0] selE;
-    logic[2:0] selM;
-    logic[2:0] selW;
-    logic[4:0] RdE;
-    logic[4:0] RdM;
-    logic[4:0] RdW;
     
     logic[31:0] ResultW;
     logic[31:0] RD1D, RD2D;
     logic[31:0] RD1E, RD2E;
+    logic[31:0] FwdRD1E, FwdRD2E;
     logic[31:0] SrcAE, SrcBE;
 
     logic[31:0] PCD;
@@ -52,7 +52,6 @@ module Datapath(
     logic[31:0] ImmExtE;
     
     logic BranchTakenE;
-    logic BranchTakenM;
      
     logic[31:0] ALUOutE;
     logic[31:0] ALUOutW;
@@ -61,7 +60,7 @@ module Datapath(
     logic[31:0] LoadDataM;
     logic[31:0] ReadDataW;
     
-    logic PCSrcM;
+    logic PCSrcE;
     
     // Instruction fields. 
     assign opD       = instrD[6:0];
@@ -70,7 +69,10 @@ module Datapath(
     assign Rs1D      = instrD[19:15];
     assign Rs2D      = instrD[24:20];
     assign funct7b5D = instrD[30];
+    assign funct12D  = instrD[31:20];
     assign funct3E   = instrE[14:12];
+    assign Rs1E      = instrE[19:15];
+    assign Rs2E      = instrE[24:20];
     assign funct3M   = instrM[14:12];
     
     /*******************************************************************/
@@ -78,17 +80,18 @@ module Datapath(
     /*******************************************************************/
     
     // Thread selection.
-    ThreadSelector TS(.reset(reset), .clk(clk), .sel(selF)); 
+    ThreadSelector TS(.reset(reset), .clk(clk), .en(~StallF),
+                      .sleep(wfiE), .sel_sleep(selE), .irq(irq),
+                      .sel(selF), .valid(ValidF));
     
-    // Jumps and taken branches go to the target computed by the ALU, with bit 0
-    // cleared as JALR requires.
-    Mux #(32, 2) PCMux(.data_in({PCPlus4M, {ALUOutM[31:1], 1'b0}}), .sel(PCSrcM), .Y(PCNextM));
-
+    // Fetch advances the thread's PC, and Execute redirects it.
     PCRepository PCRepo( .reset(reset), .clk(clk),
-                         .en(PCPlus4M != 0), .clear(1'b0),
                          .sel_read(selF),
-                         .sel_write(selM),
-                         .d_g(PCNextM),
+                         .en_next(ValidF && ~StallF),
+                         .d_next(PCPlus4F),
+                         .sel_redirect(selE),
+                         .en_redirect(RedirectE),
+                         .d_redirect(PCNextE),
                          .q_g(PCF));
 
     Adder PCAdder(.A(PCF), .B(32'h00000004), .Y(PCPlus4F));
@@ -97,11 +100,11 @@ module Datapath(
     /*                          Decode Stage.                          */
     /*******************************************************************/
     
-    RegRCEn #(32) PRegD1(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(instrF), .q(instrD));
-    RegRCEn #(32) PRegD2(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(PCPlus4F), .q(PCPlus4D));
-    RegRCEn #(32) PRegD3(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(PCF), .q(PCD));
+    RegRCEn #(32) PRegD1(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(instrF), .q(instrD));
+    RegRCEn #(32) PRegD2(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(PCPlus4F), .q(PCPlus4D));
+    RegRCEn #(32) PRegD3(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(PCF), .q(PCD));
 
-    RegRCEn #(3) PRegD4(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(selF), .q(selD));
+    RegRCEn #(3) PRegD4(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(selF), .q(selD));
     
     ImmExtend Ext(.instr(instrD[31:7]), .ImmSrc(ImmSrcD), .ImmExt(ImmExtD));
     
@@ -121,28 +124,38 @@ module Datapath(
     /*                          Execute Stage.                         */
     /*******************************************************************/
     
-    RegRCEn #(32) PRegInstE(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(instrD), .q(instrE));
+    RegRCEn #(32) PRegInstE(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(instrD), .q(instrE));
     
-    RegRCEn #(5) PRegE1(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(RdD), .q(RdE));
+    RegRCEn #(5) PRegE1(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(RdD), .q(RdE));
     
-    RegRCEn #(32) PRegE2(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(RD1D), .q(RD1E));
-    RegRCEn #(32) PRegE3(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(RD2D), .q(RD2E));
+    RegRCEn #(32) PRegE2(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(RD1D), .q(RD1E));
+    RegRCEn #(32) PRegE3(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(RD2D), .q(RD2E));
     
-    RegRCEn #(32) PRegE4(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(ImmExtD), .q(ImmExtE));
+    RegRCEn #(32) PRegE4(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(ImmExtD), .q(ImmExtE));
     
-    RegRCEn #(32) PRegE5(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(PCD), .q(PCE));
-    RegRCEn #(32) PRegE6(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(PCPlus4D), .q(PCPlus4E));
+    RegRCEn #(32) PRegE5(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(PCD), .q(PCE));
+    RegRCEn #(32) PRegE6(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(PCPlus4D), .q(PCPlus4E));
     
-    RegRCEn #(3) PRegE7(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(selD), .q(selE));
+    RegRCEn #(3) PRegE7(.clk(clk), .reset(reset), .en(1'b1), .clear(FlushE), .d(selD), .q(selE));
     
-    Mux #(32, 3) SrcAMux(.data_in({RD1E, PCE, 32'b0}), .sel(ALUSrcAE), .Y(SrcAE));
-    Mux #(32, 2) SrcBMux(.data_in({RD2E, ImmExtE}), .sel(ALUSrcBE), .Y(SrcBE));
+    // Forwarding from the Memory and Writeback stages.
+    Mux #(32, 3) FwdAMux(.data_in({RD1E, ResultW, ALUOutM}), .sel(ForwardAE), .Y(FwdRD1E));
+    Mux #(32, 3) FwdBMux(.data_in({RD2E, ResultW, ALUOutM}), .sel(ForwardBE), .Y(FwdRD2E));
+
+    Mux #(32, 3) SrcAMux(.data_in({FwdRD1E, PCE, 32'b0}), .sel(ALUSrcAE), .Y(SrcAE));
+    Mux #(32, 2) SrcBMux(.data_in({FwdRD2E, ImmExtE}), .sel(ALUSrcBE), .Y(SrcBE));
     
     ALU MainALU(.A(SrcAE), .B(SrcBE), 
                 .ALUControl(ALUControlE),
                 .result(ALUOutE));
 
-    BranchUnit BU(.A(RD1E), .B(RD2E), .funct3(funct3E), .taken(BranchTakenE));
+    BranchUnit BU(.A(FwdRD1E), .B(FwdRD2E), .funct3(funct3E), .taken(BranchTakenE));
+
+    // Jumps and taken branches go to the target computed by the ALU, with bit 0
+    // cleared as JALR requires, and WFI to the next instruction.
+    assign PCSrcE = jumpE | (branchE & BranchTakenE);
+    assign RedirectE = PCSrcE | wfiE;
+    Mux #(32, 2) PCMux(.data_in({PCPlus4E, {ALUOutE[31:1], 1'b0}}), .sel(PCSrcE), .Y(PCNextE));
     
     /*******************************************************************/
     /*                          Memory Stage.                          */
@@ -151,14 +164,12 @@ module Datapath(
     RegRCEn #(32) PRegInstM(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(instrE), .q(instrM));
 
     RegRCEn #(32) PRegM1(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(ALUOutE), .q(ALUOutM));
-    RegRCEn #(32) PRegM2(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(RD2E), .q(StoreDataM));
+    RegRCEn #(32) PRegM2(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(FwdRD2E), .q(StoreDataM));
     
-    FlipFlop PRegM3(.clk(clk), .reset(reset), .en(1'b1), .d(BranchTakenE), .q(BranchTakenM));
     RegRCEn #(32) PRegM4(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(PCPlus4E), .q(PCPlus4M));
     
     RegRCEn #(3) PRegM5(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(selE), .q(selM));
     RegRCEn #(5) PRegM6(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(RdE), .q(RdM));
-    assign PCSrcM = jumpM | (branchM & BranchTakenM);
 
     StoreAlign SA(.WD(StoreDataM), .offset(ALUOutM[1:0]), .funct3(funct3M), .Y(WriteDataM), .BE(ByteEnableM));
     LoadExtend LE(.RD(ReadDataM), .offset(ALUOutM[1:0]), .funct3(funct3M), .Y(LoadDataM));

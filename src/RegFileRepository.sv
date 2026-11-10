@@ -30,17 +30,24 @@ module RegFileRepository(
     logic[31:0] OP2_4;
     RegFile RF4(.clk(clk), .WE3(WE3_g && sel_write == 4), .RA1(RA1_g), .RA2(RA2_g), .WA3(WA3_g), .WD3(WD3_g), .RD1(OP1_4), .RD2(OP2_4)); 
     
+    logic[31:0] OP1;
+    logic[31:0] OP2;
+
     // RD1 selection MUZ:
     Mux #(32, 5) RD1_Mux(
         .data_in({OP1_0, OP1_1, OP1_2, OP1_3, OP1_4}),
         .sel(sel_read),
-        .Y(RD1_g)
+        .Y(OP1)
     );
     
     // RD2 selection MUX:
     Mux #(32, 5) RD2_Mux(
         .data_in({OP2_0, OP2_1, OP2_2, OP2_3, OP2_4}),
         .sel(sel_read),
-        .Y(RD2_g)
+        .Y(OP2)
     );
+
+    // Pass through a register that the reading thread is writing back.
+    assign RD1_g = (WE3_g && sel_write == sel_read && WA3_g == RA1_g && RA1_g != 0) ? WD3_g : OP1;
+    assign RD2_g = (WE3_g && sel_write == sel_read && WA3_g == RA2_g && RA2_g != 0) ? WD3_g : OP2;
 endmodule

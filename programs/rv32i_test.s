@@ -6,7 +6,7 @@
 # and fails the build if the program before it overflowed its slot.
 #
 # Each thread keeps the number of its current check in gp. When it is done, it
-# stores its status word to RESULTS + 4 * i and spins: 1 if all of its checks
+# stores its status word to RESULTS + 4 * i and sleeps: 1 if all of its checks
 # passed, (n << 1) | 1 if check n failed.
 
     .option norelax
@@ -332,10 +332,12 @@ ackermann:
 pass:
     li   t6, 1
     sw   t6, 0(s1)
-1:  j    1b
+1:  wfi
+    j    1b
 
 fail:
     slli gp, gp, 1
     ori  gp, gp, 1
     sw   gp, 0(s1)
-1:  j    1b
+1:  wfi
+    j    1b

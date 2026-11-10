@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 module Top(
-        input logic clk, reset
+        input logic clk, reset,
+        input logic[4:0] irq
     );
     logic[31:0] InstructionAddr;
     logic[31:0] Instruction;
@@ -12,6 +13,7 @@ module Top(
     
     Rx32 Processor(
         .clk(clk), .reset(reset),
+        .irq(irq),
         .PCF(InstructionAddr),
         .instrF(Instruction),
         .ReadDataM(ReadData),
