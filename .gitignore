@@ -1,3 +1,6 @@
+# Verilator output.
+obj_dir/
+
 # Program build output.
 programs/*.o
 programs/*.elf
