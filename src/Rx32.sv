@@ -5,15 +5,18 @@ module Rx32(
         input  logic[31:0] instrF,
         output logic[31:0] PCF, 
         output logic       MemWriteM,
+        output logic[3:0]  ByteEnableM,
         output logic[31:0] ALUOutM,
         output logic[31:0] WriteDataM 
     );
-    logic[5:0] OPD, functD;
-    logic RegDistE;
-    logic ALUSrcE;
-    logic PCSrcD;
+    logic[6:0] opD;
+    logic[2:0] funct3D;
+    logic funct7b5D;
+    logic[2:0] ImmSrcD;
+    logic[1:0] ALUSrcAE;
+    logic ALUSrcBE;
     
-    logic MemToRegW;
+    logic[1:0] ResultSrcW;
     
     logic RegWriteW;
     
@@ -22,35 +25,39 @@ module Rx32(
     logic[3:0] ALUControlE;
     
     ControlUnit CC(
-        .OPCodeD(OPD), 
-        .functD(functD),
+        .opD(opD),
+        .funct3D(funct3D),
+        .funct7b5D(funct7b5D),
         .clk(clk),
         .reset(reset),
+        .ImmSrcD(ImmSrcD),
+        .ALUSrcAE(ALUSrcAE),
+        .ALUSrcBE(ALUSrcBE),
+        .ALUControlE(ALUControlE),
         .branchM(branchM),
-        .MemToRegW(MemToRegW),
-        .MemWriteM(MemWriteM),
-        .ALUSrcE(ALUSrcE), 
-        .RegDistE(RegDistE),
-        .RegWriteW(RegWriteW),
         .jumpM(jumpM),
-        .ALUControlE(ALUControlE)
+        .MemWriteM(MemWriteM),
+        .RegWriteW(RegWriteW),
+        .ResultSrcW(ResultSrcW)
     );
     
     Datapath DP(
         .clk(clk), 
         .reset(reset), 
-        .MemToRegW(MemToRegW), 
         .RegWriteW(RegWriteW),
-        .RegDistE(RegDistE),
         .jumpM(jumpM), 
         .branchM(branchM),
-        .ALUSrcE(ALUSrcE),
+        .ResultSrcW(ResultSrcW),
+        .ImmSrcD(ImmSrcD),
+        .ALUSrcAE(ALUSrcAE),
+        .ALUSrcBE(ALUSrcBE),
         .ALUControlE(ALUControlE),
         .instrF(instrF), 
         .ReadDataM(ReadDataM), 
-        .OPD(OPD), .functD(functD),
+        .opD(opD), .funct3D(funct3D), .funct7b5D(funct7b5D),
         .PCF(PCF), .ALUOutM(ALUOutM),
-        .WriteDataM(WriteDataM)
+        .WriteDataM(WriteDataM),
+        .ByteEnableM(ByteEnableM)
     );
     
 endmodule

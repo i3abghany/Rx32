@@ -8,6 +8,7 @@ module Top(
     logic[31:0] DataAddr;
     logic[31:0] WriteData;
     logic MemWrite;
+    logic[3:0] ByteEnable;
     
     Rx32 Processor(
         .clk(clk), .reset(reset),
@@ -15,6 +16,7 @@ module Top(
         .instrF(Instruction),
         .ReadDataM(ReadData),
         .MemWriteM(MemWrite),
+        .ByteEnableM(ByteEnable),
         .ALUOutM(DataAddr),
         .WriteDataM(WriteData)
     );
@@ -23,6 +25,7 @@ module Top(
         .reset(reset),
         .clk(clk),
         .WE(MemWrite),
+        .BE(ByteEnable),
         .A(DataAddr), 
         .WD(WriteData),
         .RD(ReadData)
