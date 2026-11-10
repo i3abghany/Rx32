@@ -8,7 +8,7 @@ module PCRepository (input logic clk, reset,
                     output logic[31:0] q_g         
                 );
     
-    logic [31:0] PC_q [4:0];
+    logic [31:0] PC_q [0:4];
 
     PCReg #(.WIDTH(32), .RESET_VAL(0)) PC0(.clk(clk), .reset(reset), .en(en && (sel_write == 0)), .clear(clear), .d(d_g), .q(PC_q[0]));
     PCReg #(.WIDTH(32), .RESET_VAL(400)) PC1(.clk(clk), .reset(reset), .en(en && (sel_write == 1)), .clear(clear), .d(d_g), .q(PC_q[1]));

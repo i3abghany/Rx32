@@ -126,7 +126,7 @@ module Datapath(
     RegRCEn #(32) PRegE4(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(SrcAD), .q(SrcAE));
     RegRCEn #(32) PRegE5(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(SrcBD), .q(RegSrcBE));
     
-    Mux #(32, 2) SrcBMux(.data_in({RegSrcBE, SignImmD}), .sel(ALUSrcE), .Y(SrcBE));
+    Mux #(32, 2) SrcBMux(.data_in({RegSrcBE, SignImmE}), .sel(ALUSrcE), .Y(SrcBE));
     
     RegRCEn #(32) PRegE6(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(SignImmD), .q(SignImmE));
     
