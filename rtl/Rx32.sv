@@ -1,9 +1,10 @@
 `timescale 1ns / 1ps
 
 // irq[i] wakes thread i up from WFI (there are no traps).
-module Rx32(
+module Rx32 #(parameter NUM_THREADS = 5,
+              localparam SEL_WIDTH = NUM_THREADS > 1 ? $clog2(NUM_THREADS) : 1)(
         input logic clk,   reset,
-        input  logic[4:0]  irq,
+        input  logic[NUM_THREADS - 1:0] irq,
         input  logic[31:0] ReadDataM,
         input  logic[31:0] instrF,
         output logic[31:0] PCF, 
@@ -31,7 +32,7 @@ module Rx32(
     logic[3:0] ALUControlE;
 
     logic ValidF, RedirectE;
-    logic[2:0] selF, selD, selE, selM, selW;
+    logic[SEL_WIDTH - 1:0] selF, selD, selE, selM, selW;
     logic[4:0] Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW;
     logic StallF, StallD, FlushD, FlushE;
     logic[1:0] ForwardAE, ForwardBE;
@@ -58,7 +59,7 @@ module Rx32(
         .ResultSrcW(ResultSrcW)
     );
     
-    Datapath DP(
+    Datapath #(.NUM_THREADS(NUM_THREADS)) DP(
         .clk(clk), 
         .reset(reset), 
         .RegWriteW(RegWriteW),
@@ -84,7 +85,7 @@ module Rx32(
         .ByteEnableM(ByteEnableM)
     );
     
-    HazardUnit HU(
+    HazardUnit #(.NUM_THREADS(NUM_THREADS)) HU(
         .ValidF(ValidF),
         .selF(selF), .selD(selD), .selE(selE), .selM(selM), .selW(selW),
         .Rs1D(Rs1D), .Rs2D(Rs2D),

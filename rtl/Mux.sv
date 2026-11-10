@@ -2,13 +2,12 @@
 
 // data_in has an ascending range so that data_in({d0, d1, ...}) selects d0
 // when sel is 0, d1 when sel is 1, and so on.
-module Mux #(parameter WIDTH = 32, parameter NUM_INPUTS = 2)
+module Mux #(parameter WIDTH = 32, parameter NUM_INPUTS = 2,
+             localparam SEL_WIDTH = NUM_INPUTS > 1 ? $clog2(NUM_INPUTS) : 1)
     (input logic[WIDTH - 1:0] data_in[0:NUM_INPUTS - 1],
-     input logic[$clog2(NUM_INPUTS) - 1:0] sel,
+     input logic[SEL_WIDTH - 1:0] sel,
      output logic[WIDTH - 1:0] Y
     );
-
-    localparam SEL_WIDTH = $clog2(NUM_INPUTS);
 
     always_comb begin
         Y = data_in[sel];

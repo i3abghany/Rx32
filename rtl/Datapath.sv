@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
-module Datapath(
+module Datapath #(parameter NUM_THREADS = 5,
+                  localparam SEL_WIDTH = NUM_THREADS > 1 ? $clog2(NUM_THREADS) : 1)(
     input logic clk, reset,
     RegWriteW,
     jumpE, branchE, wfiE,
@@ -11,7 +12,7 @@ module Datapath(
     input logic[3:0] ALUControlE, 
     input logic[31:0] instrF,
     input logic[31:0] ReadDataM,
-    input logic[4:0] irq,
+    input logic[NUM_THREADS - 1:0] irq,
     input logic StallF, StallD, FlushD, FlushE,
     input logic[1:0] ForwardAE, ForwardBE,
     output logic[6:0] opD,
@@ -19,7 +20,7 @@ module Datapath(
     output logic funct7b5D,
     output logic[11:0] funct12D,
     output logic ValidF, RedirectE,
-    output logic[2:0] selF, selD, selE, selM, selW,
+    output logic[SEL_WIDTH - 1:0] selF, selD, selE, selM, selW,
     output logic[4:0] Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW,
     output logic[31:0] PCF, 
     output logic[31:0] ALUOutM,
@@ -80,12 +81,14 @@ module Datapath(
     /*******************************************************************/
     
     // Thread selection.
-    ThreadSelector TS(.reset(reset), .clk(clk), .en(~StallF),
+    ThreadSelector #(.NUM_THREADS(NUM_THREADS))
+                   TS(.reset(reset), .clk(clk), .en(~StallF),
                       .sleep(wfiE), .sel_sleep(selE), .irq(irq),
                       .sel(selF), .valid(ValidF));
     
     // Fetch advances the thread's PC, and Execute redirects it.
-    PCRepository PCRepo( .reset(reset), .clk(clk),
+    PCRepository #(.NUM_THREADS(NUM_THREADS))
+                 PCRepo( .reset(reset), .clk(clk),
                          .sel_read(selF),
                          .en_next(ValidF && ~StallF),
                          .d_next(PCPlus4F),
@@ -104,13 +107,14 @@ module Datapath(
     RegRCEn #(32) PRegD2(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(PCPlus4F), .q(PCPlus4D));
     RegRCEn #(32) PRegD3(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(PCF), .q(PCD));
 
-    RegRCEn #(3) PRegD4(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(selF), .q(selD));
+    RegRCEn #(SEL_WIDTH) PRegD4(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(selF), .q(selD));
     
     ImmExtend Ext(.instr(instrD[31:7]), .ImmSrc(ImmSrcD), .ImmExt(ImmExtD));
     
     // Register files repository. Reading is done in the decode stage, writing is done in the 
     // Writeback stage.
-    RegFileRepository RegfileRepo(.clk(clk), 
+    RegFileRepository #(.NUM_THREADS(NUM_THREADS))
+                      RegfileRepo(.clk(clk), 
                                   .WE3_g(RegWriteW), 
                                   .sel_read(selD), 
                                   .sel_write(selW),
@@ -136,7 +140,7 @@ module Datapath(
     RegRCEn #(32) PRegE5(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(PCD), .q(PCE));
     RegRCEn #(32) PRegE6(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(PCPlus4D), .q(PCPlus4E));
     
-    RegRCEn #(3) PRegE7(.clk(clk), .reset(reset), .en(1'b1), .clear(FlushE), .d(selD), .q(selE));
+    RegRCEn #(SEL_WIDTH) PRegE7(.clk(clk), .reset(reset), .en(1'b1), .clear(FlushE), .d(selD), .q(selE));
     
     // Forwarding from the Memory and Writeback stages.
     Mux #(32, 3) FwdAMux(.data_in({RD1E, ResultW, ALUOutM}), .sel(ForwardAE), .Y(FwdRD1E));
@@ -168,7 +172,7 @@ module Datapath(
     
     RegRCEn #(32) PRegM4(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(PCPlus4E), .q(PCPlus4M));
     
-    RegRCEn #(3) PRegM5(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(selE), .q(selM));
+    RegRCEn #(SEL_WIDTH) PRegM5(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(selE), .q(selM));
     RegRCEn #(5) PRegM6(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(RdE), .q(RdM));
 
     StoreAlign SA(.WD(StoreDataM), .offset(ALUOutM[1:0]), .funct3(funct3M), .Y(WriteDataM), .BE(ByteEnableM));
@@ -179,7 +183,7 @@ module Datapath(
     /*******************************************************************/
     RegRCEn #(32) PRegW1(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(LoadDataM), .q(ReadDataW));
     RegRCEn #(32) PRegW2(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(ALUOutM), .q(ALUOutW));
-    RegRCEn #(3)  PRegW3(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(selM), .q(selW));
+    RegRCEn #(SEL_WIDTH) PRegW3(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(selM), .q(selW));
     RegRCEn #(5)  PRegW4(.clk(clk), .reset(reset), .en(1'b1), .clear(1'b0), .d(RdM), .q(RdW));
     RegRCEn #(32) PRegW5(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(PCPlus4M), .q(PCPlus4W));
 

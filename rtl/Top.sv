@@ -1,8 +1,11 @@
 `timescale 1ns / 1ps
-module Top(
+module Top #(parameter NUM_THREADS = 5)(
         input logic clk, reset,
-        input logic[4:0] irq
+        input logic[NUM_THREADS - 1:0] irq
     );
+    // 100 instructions per thread, for at least 5 (the test programs' slots).
+    localparam IMEM_ADDR_WIDTH = $clog2(100 * (NUM_THREADS > 5 ? NUM_THREADS : 5));
+
     logic[31:0] InstructionAddr;
     logic[31:0] Instruction;
     logic[31:0] ReadData;
@@ -11,7 +14,7 @@ module Top(
     logic MemWrite;
     logic[3:0] ByteEnable;
     
-    Rx32 Processor(
+    Rx32 #(.NUM_THREADS(NUM_THREADS)) Processor(
         .clk(clk), .reset(reset),
         .irq(irq),
         .PCF(InstructionAddr),
@@ -33,8 +36,8 @@ module Top(
         .RD(ReadData)
     );
     
-    IMem InstructionMemory(
-        .A(InstructionAddr[10:2]),
+    IMem #(.ADDR_WIDTH(IMEM_ADDR_WIDTH)) InstructionMemory(
+        .A(InstructionAddr[IMEM_ADDR_WIDTH + 1:2]),
         .RD(Instruction)
     );
     

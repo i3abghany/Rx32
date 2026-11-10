@@ -1,15 +1,20 @@
-# Self-checking RV32I test program for Rx32.
+# Self-checking RV32I test program for Rx32 with THREADS threads (default 5).
 #
-# Each of the five hardware threads runs its own program out of a 400-byte
-# (100-instruction) slot of the instruction memory, since PCRepository resets
-# thread i's PC to 400 * i. `.org` places each program at the start of its slot,
-# and fails the build if the program before it overflowed its slot.
+# Five programs each run out of a 400-byte (100-instruction) slot of the
+# instruction memory, since PCRepository resets thread i's PC to 400 * i. `.org`
+# places each program at the start of its slot, and fails the build if the
+# program before it overflowed its slot. Thread i runs slots i, i + THREADS and
+# so on, so every slot runs; threads beyond the fifth only report.
 #
 # Each thread keeps the number of its current check in gp. When it is done, it
 # stores its status word to RESULTS + 4 * i and sleeps: 1 if all of its checks
 # passed, (n << 1) | 1 if check n failed.
 
     .option norelax
+
+    .ifndef THREADS
+    .equ THREADS, 5
+    .endif
 
     .ifndef DATA_BASE
     .equ DATA_BASE, 0x0
@@ -26,6 +31,21 @@
         bne  \reg, t6, fail
     .endm
 
+    # Ends slot \slot: goes on to slot \slot + THREADS if any, else passes.
+    .macro NEXT slot
+        .if \slot + THREADS == 1
+            j    checks1
+        .elseif \slot + THREADS == 2
+            j    checks2
+        .elseif \slot + THREADS == 3
+            j    checks3
+        .elseif \slot + THREADS == 4
+            j    checks4
+        .else
+            j    pass
+        .endif
+    .endm
+
     .text
     .globl _start
 _start:
@@ -35,6 +55,7 @@ _start:
 ############################################################################
 thread0:
     li   s1, RESULTS + 0
+checks0:
     li   a0, 0x87654321
     li   a1, 0x0f0f0f24         # Shifts by a1 use only a1[4:0] = 4.
     li   a3, 31
@@ -73,7 +94,7 @@ thread0:
     CHECK 16, a2, 0
     add  zero, a0, a1           # Writes to x0 are discarded.
     CHECK 17, zero, 0
-    j    pass
+    NEXT 0
 
 ############################################################################
 # Thread 1: register-immediate ALU instructions, LUI and AUIPC.
@@ -81,6 +102,7 @@ thread0:
     .org 400
 thread1:
     li   s1, RESULTS + 4
+checks1:
     li   a0, 0xfedcba98
     li   a1, 0x123
 
@@ -132,7 +154,7 @@ t1_auipc1:
     lui  t6, %hi(t1_auipc1 + 0x1000)
     addi t6, t6, %lo(t1_auipc1 + 0x1000)
     bne  a2, t6, fail
-    j    pass
+    NEXT 1
 
 ############################################################################
 # Thread 2: loads and stores of bytes, halfwords and words.
@@ -140,6 +162,7 @@ t1_auipc1:
     .org 800
 thread2:
     li   s1, RESULTS + 8
+checks2:
     li   s0, SCRATCH + 0x20
     li   a0, 0xf0e17f80         # Bytes 0x80, 0x7f, 0xe1, 0xf0 from address 0.
     li   a1, 0x1234a55a
@@ -186,7 +209,7 @@ thread2:
     CHECK 15, a2, 0x1234a55a
     lw   a2, 0(s0)
     CHECK 16, a2, 0xf0e17f80
-    j    pass
+    NEXT 2
 
 ############################################################################
 # Thread 3: conditional branches.
@@ -194,6 +217,7 @@ thread2:
     .org 1200
 thread3:
     li   s1, RESULTS + 12
+checks3:
     li   a0, 0x80000000         # Below a1 when signed, above it when unsigned.
     li   a1, 0x7fffffff
 
@@ -249,7 +273,7 @@ thread3:
     addi a2, a2, -1
     bnez a2, 1b
     CHECK 17, a3, 30
-    j    pass
+    NEXT 3
 
 ############################################################################
 # Thread 4: JAL, JALR and a recursive function.
@@ -257,6 +281,7 @@ thread3:
     .org 1600
 thread4:
     li   s1, RESULTS + 16
+checks4:
     li   sp, STACK
 
     # JAL jumps to its target and links the address after it.
@@ -298,7 +323,7 @@ t4_jalr_same_target:
     jal  ra, ackermann
     CHECK 4, a0, 9
     CHECK 5, sp, STACK
-    j    pass
+    NEXT 4
 
 # Ackermann's function A(m = a0, n = a1), returned in a0.
 ackermann:
@@ -325,10 +350,27 @@ ackermann:
     ret
 
 ############################################################################
-# Shared by all threads, in the words after thread 4's slot. s1 holds the
+# Threads beyond the fifth, which just pass.
+############################################################################
+    .if THREADS > 5
+    .set slot, 5
+    .rept THREADS - 5
+    .org 400 * slot
+    li   s1, RESULTS + 4 * slot
+    j    pass
+    .set slot, slot + 1
+    .endr
+    .endif
+
+############################################################################
+# Shared by all threads, in the words after the last slot. s1 holds the
 # address of the running thread's status word.
 ############################################################################
+    .if THREADS > 5
+    .org 400 * THREADS
+    .else
     .org 2000
+    .endif
 pass:
     li   t6, 1
     sw   t6, 0(s1)

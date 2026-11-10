@@ -3,9 +3,10 @@
 // Resolves hazards like a single-threaded pipeline's hazard unit, but only
 // between instructions of the same thread. They only occur when fewer than
 // three threads are awake.
-module HazardUnit(
+module HazardUnit #(parameter NUM_THREADS = 5,
+                    localparam SEL_WIDTH = NUM_THREADS > 1 ? $clog2(NUM_THREADS) : 1)(
     input logic ValidF,
-    input logic[2:0] selF, selD, selE, selM, selW,
+    input logic[SEL_WIDTH - 1:0] selF, selD, selE, selM, selW,
     input logic[4:0] Rs1D, Rs2D,
     input logic[4:0] Rs1E, Rs2E, RdE,
     input logic[4:0] RdM, RdW,

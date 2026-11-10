@@ -3,12 +3,16 @@
 # Every thread sleeps in WFI as soon as it starts, and Top_tb wakes the threads
 # one at a time, so each runs its checks alone, as on a single-threaded
 # pipeline. Top_tb wakes each thread only once, so a thread that sleeps again
-# before reporting never finishes.
+# before reporting never finishes (later slots are entered after the WFI).
 #
 # Slots, gp and status words are as in rv32i_test.s. The `nop`s space out
 # dependent instructions so that the result comes from a given stage.
 
     .option norelax
+
+    .ifndef THREADS
+    .equ THREADS, 5
+    .endif
 
     .ifndef DATA_BASE
     .equ DATA_BASE, 0x0
@@ -25,6 +29,21 @@
         bne  \reg, t6, fail
     .endm
 
+    # Ends slot \slot: goes on to slot \slot + THREADS if any, else passes.
+    .macro NEXT slot
+        .if \slot + THREADS == 1
+            j    checks1
+        .elseif \slot + THREADS == 2
+            j    checks2
+        .elseif \slot + THREADS == 3
+            j    checks3
+        .elseif \slot + THREADS == 4
+            j    checks4
+        .else
+            j    pass
+        .endif
+    .endm
+
     .text
     .globl _start
 _start:
@@ -34,8 +53,9 @@ _start:
 ############################################################################
 thread0:
     li   s1, RESULTS + 0
-    li   s0, SCRATCH + 0x00
     wfi
+checks0:
+    li   s0, SCRATCH + 0x00
 
     # From the Memory stage, to rs1 and rs2.
     li   a0, 5
@@ -108,7 +128,7 @@ t0_auipc:
     addi t6, t6, %lo(t0_auipc + 8)
     bne  a1, t6, fail
 
-    j    pass
+    NEXT 0
 
 ############################################################################
 # Thread 1: loads.
@@ -116,8 +136,9 @@ t0_auipc:
     .org 400
 thread1:
     li   s1, RESULTS + 4
-    li   s0, SCRATCH + 0x40
     wfi
+checks1:
+    li   s0, SCRATCH + 0x40
 
     li   a0, 0x8001
     sw   a0, 0(s0)
@@ -196,7 +217,7 @@ thread1:
     sw   a1, 4(s0)
     lw   a2, 4(s0)
     CHECK 14, a2, 18
-    j    pass
+    NEXT 1
 
 ############################################################################
 # Thread 2: branches and jumps.
@@ -204,8 +225,9 @@ thread1:
     .org 800
 thread2:
     li   s1, RESULTS + 8
-    li   s0, SCRATCH + 0x80
     wfi
+checks2:
+    li   s0, SCRATCH + 0x80
 
     # Taken branches flush the two instructions after them...
     li   gp, 1
@@ -299,7 +321,7 @@ t2_jalr_link:
     addi a0, a0, 1
     addi a0, a0, 2
 1:  bnez a0, fail
-    j    pass
+    NEXT 2
 
 ############################################################################
 # Thread 3: loops over memory.
@@ -307,8 +329,9 @@ t2_jalr_link:
     .org 1200
 thread3:
     li   s1, RESULTS + 12
-    li   s0, SCRATCH + 0xc0
     wfi
+checks3:
+    li   s0, SCRATCH + 0xc0
 
     # ECALL and EBREAK do not sleep.
     ecall
@@ -353,7 +376,7 @@ thread3:
     CHECK 3, a0, 0x15000000
     lw   a0, 32(s0)
     CHECK 4, a0, 0x01000000
-    j    pass
+    NEXT 3
 
 ############################################################################
 # Thread 4: forwarding to stores and branches, and calls and returns.
@@ -361,9 +384,10 @@ thread3:
     .org 1600
 thread4:
     li   s1, RESULTS + 16
+    wfi
+checks4:
     li   s0, SCRATCH + 0x100
     li   sp, STACK
-    wfi
 
     # A store's address from Memory and data from Writeback.
     li   a0, 0x5a
@@ -400,7 +424,7 @@ thread4:
     jal  ra, ackermann
     CHECK 4, a0, 7
     CHECK 5, sp, STACK
-    j    pass
+    NEXT 4
 
 # Ackermann's function A(m = a0, n = a1), returned in a0.
 ackermann:
@@ -427,10 +451,28 @@ ackermann:
     jalr zero, 0(ra)
 
 ############################################################################
-# Shared by all threads, in the words after thread 4's slot. s1 holds the
+# Threads beyond the fifth sleep first, so the first five run alone, then pass.
+############################################################################
+    .if THREADS > 5
+    .set slot, 5
+    .rept THREADS - 5
+    .org 400 * slot
+    li   s1, RESULTS + 4 * slot
+    wfi
+    j    pass
+    .set slot, slot + 1
+    .endr
+    .endif
+
+############################################################################
+# Shared by all threads, in the words after the last slot. s1 holds the
 # address of the running thread's status word.
 ############################################################################
+    .if THREADS > 5
+    .org 400 * THREADS
+    .else
     .org 2000
+    .endif
 pass:
     li   t6, 1
     sw   t6, 0(s1)

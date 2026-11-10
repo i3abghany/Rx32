@@ -3,28 +3,28 @@
 // Runs InstructionMemory.mem (built from programs/rv32i_test.s), or the image
 // given with +program=<file>, until every thread has stored its status word to
 // data memory word i: 1 if all of the thread's checks passed, (n << 1) | 1 if
-// check n failed. Each thread must then be asleep in WFI.
+// check n failed. Each thread must then be asleep in WFI. The image must be
+// built for NUM_THREADS threads.
 //
 // Threads that sleep before reporting are woken one at a time, in order
 // (hazard_test.s relies on this).
-module Top_tb();
-    localparam THREADS = 5;
+module Top_tb #(parameter NUM_THREADS = 5)();
     localparam MAX_CYCLES = 20000;
 
     logic clk, reset;
-    logic[4:0] irq;
-    logic[THREADS - 1:0] reported, asleep;
+    logic[NUM_THREADS - 1:0] irq;
+    logic[NUM_THREADS - 1:0] reported, asleep;
     logic[31:0] status;
     logic failed;
     string image;
     int cycle;
 
-    Top DUT(.clk(clk), .reset(reset), .irq(irq));
+    Top #(.NUM_THREADS(NUM_THREADS)) DUT(.clk(clk), .reset(reset), .irq(irq));
 
     always #5 clk = ~clk;
 
     always_comb
-        for (int i = 0; i < THREADS; i++)
+        for (int i = 0; i < NUM_THREADS; i++)
             reported[i] = DUT.DataMemory.RAM[i] != 0;
     assign asleep = DUT.Processor.DP.TS.asleep;
 
@@ -45,7 +45,7 @@ module Top_tb();
         @(negedge clk);
         reset = 0;
 
-        for (int i = 0; i < THREADS; i++) begin
+        for (int i = 0; i < NUM_THREADS; i++) begin
             while (cycle < MAX_CYCLES && !reported[i] && !asleep[i])
                 step();
             if (!reported[i] && asleep[i]) begin
@@ -60,7 +60,7 @@ module Top_tb();
         repeat (20) step();
 
         failed = 0;
-        for (int i = 0; i < THREADS; i++) begin
+        for (int i = 0; i < NUM_THREADS; i++) begin
             status = DUT.DataMemory.RAM[i];
             if (status == 1 && asleep[i])
                 $display("Thread %0d: passed", i);
