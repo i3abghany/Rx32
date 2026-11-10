@@ -3,7 +3,7 @@
 
 CROSS   ?= riscv64-unknown-elf-
 PROGRAM ?= rv32i_test
-MEM     ?= ../src/InstructionMemory.mem
+MEM     ?= ../rtl/InstructionMemory.mem
 
 all: $(MEM)
 
