@@ -80,9 +80,11 @@ module Datapath #(parameter NUM_THREADS = 5,
     /*                           Fetch Stage.                          */
     /*******************************************************************/
     
-    // Thread selection.
+    // Thread selection. In RV32I, only branches, jumps and SYSTEM have opcode bit 6
+    // set, which is quicker on the fetch path than ControlUnit's decoding.
     ThreadSelector #(.NUM_THREADS(NUM_THREADS))
                    TS(.reset(reset), .clk(clk), .en(~StallF),
+                      .selD(selD), .controlD(opD[6]),
                       .sleep(wfiE), .sel_sleep(selE), .irq(irq),
                       .sel(selF), .valid(ValidF));
     
