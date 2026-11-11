@@ -44,6 +44,8 @@ module Datapath #(parameter NUM_THREADS = 5,
     logic[31:0] PCE;
     
     logic[31:0] PCPlus4F;
+    logic[31:0] ImmExtF, PCTargetF, PCNextF;
+    logic PredictF, PredictD, PredictE;
     logic[31:0] PCPlus4D;
     logic[31:0] PCPlus4E;
     logic[31:0] PCPlus4M;
@@ -54,7 +56,7 @@ module Datapath #(parameter NUM_THREADS = 5,
     
     logic BranchTakenE;
      
-    logic[31:0] ALUOutE;
+    logic[31:0] ALUOutE, ResultE;
     logic[31:0] ALUOutW;
     
     logic[31:0] StoreDataM;
@@ -88,18 +90,24 @@ module Datapath #(parameter NUM_THREADS = 5,
                       .sleep(wfiE), .sel_sleep(selE), .irq(irq),
                       .sel(selF), .valid(ValidF));
     
-    // Fetch advances the thread's PC, and Execute redirects it.
+    // Fetch advances the thread's PC, and Execute redirects it if mispredicted.
     PCRepository #(.NUM_THREADS(NUM_THREADS))
                  PCRepo( .reset(reset), .clk(clk),
                          .sel_read(selF),
                          .en_next(ValidF && ~StallF),
-                         .d_next(PCPlus4F),
+                         .d_next(PCNextF),
                          .sel_redirect(selE),
                          .en_redirect(RedirectE),
                          .d_redirect(PCNextE),
                          .q_g(PCF));
 
     Adder PCAdder(.A(PCF), .B(32'h00000004), .Y(PCPlus4F));
+
+    // Static prediction: JALs and backward branches are taken, straight from the fetched word.
+    assign PredictF = instrF[6:0] == 7'b1101111 || (instrF[6:0] == 7'b1100011 && instrF[31]);
+    ImmExtend ExtF(.instr(instrF[31:7]), .ImmSrc(instrF[2] ? 3'b100 : 3'b010), .ImmExt(ImmExtF));
+    Adder TargetAdder(.A(PCF), .B(ImmExtF), .Y(PCTargetF));
+    Mux #(32, 2) PCNextMux(.data_in({PCPlus4F, PCTargetF}), .sel(PredictF), .Y(PCNextF));
     
     /*******************************************************************/
     /*                          Decode Stage.                          */
@@ -110,6 +118,7 @@ module Datapath #(parameter NUM_THREADS = 5,
     RegRCEn #(32) PRegD3(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(PCF), .q(PCD));
 
     RegRCEn #(SEL_WIDTH) PRegD4(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(selF), .q(selD));
+    RegRCEn #(1) PRegD5(.clk(clk), .reset(reset), .en(~StallD), .clear(FlushD), .d(PredictF), .q(PredictD));
     
     ImmExtend Ext(.instr(instrD[31:7]), .ImmSrc(ImmSrcD), .ImmExt(ImmExtD));
     
@@ -143,6 +152,7 @@ module Datapath #(parameter NUM_THREADS = 5,
     RegRCEn #(32) PRegE6(.clk(clk), .reset(reset), .clear(FlushE), .en(1'b1), .d(PCPlus4D), .q(PCPlus4E));
     
     RegRCEn #(SEL_WIDTH) PRegE7(.clk(clk), .reset(reset), .en(1'b1), .clear(FlushE), .d(selD), .q(selE));
+    RegRCEn #(1) PRegE8(.clk(clk), .reset(reset), .en(1'b1), .clear(FlushE), .d(PredictD), .q(PredictE));
     
     // Forwarding from the Memory and Writeback stages.
     Mux #(32, 3) FwdAMux(.data_in({RD1E, ResultW, ALUOutM}), .sel(ForwardAE), .Y(FwdRD1E));
@@ -158,9 +168,10 @@ module Datapath #(parameter NUM_THREADS = 5,
     BranchUnit BU(.A(FwdRD1E), .B(FwdRD2E), .funct3(funct3E), .taken(BranchTakenE));
 
     // Jumps and taken branches go to the target computed by the ALU, with bit 0
-    // cleared as JALR requires, and WFI to the next instruction.
+    // cleared as JALR requires, and WFI to the next instruction. Only mispredictions
+    // and WFI redirect.
     assign PCSrcE = jumpE | (branchE & BranchTakenE);
-    assign RedirectE = PCSrcE | wfiE;
+    assign RedirectE = (PCSrcE ^ PredictE) | wfiE;
     Mux #(32, 2) PCMux(.data_in({PCPlus4E, {ALUOutE[31:1], 1'b0}}), .sel(PCSrcE), .Y(PCNextE));
     
     /*******************************************************************/
@@ -169,7 +180,10 @@ module Datapath #(parameter NUM_THREADS = 5,
     
     RegRCEn #(32) PRegInstM(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(instrE), .q(instrM));
 
-    RegRCEn #(32) PRegM1(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(ALUOutE), .q(ALUOutM));
+    // A jump's link, for forwarding to its target when it was predicted.
+    Mux #(32, 2) LinkMux(.data_in({ALUOutE, PCPlus4E}), .sel(jumpE), .Y(ResultE));
+
+    RegRCEn #(32) PRegM1(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(ResultE), .q(ALUOutM));
     RegRCEn #(32) PRegM2(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(FwdRD2E), .q(StoreDataM));
     
     RegRCEn #(32) PRegM4(.clk(clk), .reset(reset), .clear(1'b0), .en(1'b1), .d(PCPlus4E), .q(PCPlus4M));

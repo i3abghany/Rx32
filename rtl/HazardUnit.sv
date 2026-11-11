@@ -20,8 +20,8 @@ module HazardUnit #(parameter NUM_THREADS = 5,
     logic lwStall;
 
     // Forward from the thread's most recent writer of the register in Memory or
-    // Writeback. In Memory, that is never a load (lwStall) or a jump (which
-    // flushes the instructions after it), so ALUOutM is its result.
+    // Writeback. In Memory, that is never a load (lwStall), so ALUOutM is its
+    // result (a jump's link).
     always_comb begin
         if (RegWriteM && RdM != 0 && RdM == Rs1E && selM == selE)      ForwardAE = 2'b10;
         else if (RegWriteW && RdW != 0 && RdW == Rs1E && selW == selE) ForwardAE = 2'b01;
@@ -38,8 +38,8 @@ module HazardUnit #(parameter NUM_THREADS = 5,
     assign StallF = lwStall;
     assign StallD = lwStall;
 
-    // A taken branch, jump or WFI flushes the instructions its thread fetched
-    // after it. Nothing is fetched while every thread is asleep.
+    // A mispredicted branch or jump, or a WFI, flushes the instructions its
+    // thread fetched after it. Nothing is fetched while every thread is asleep.
     assign FlushD = (RedirectE && selF == selE) || !ValidF;
     assign FlushE = (RedirectE && selD == selE) || lwStall;
 endmodule
